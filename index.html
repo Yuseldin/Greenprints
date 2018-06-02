@@ -34,7 +34,7 @@ function clickfunction(e) {
 	
 	var region = e.target.feature.properties.REG_NAME_7;
     var subregion = e.target.feature.properties.SUB_NAME_7;
-		document.getElementById("infobox").innerHTML = "Region Name: "+region+"</br>Subregion Name: "+subregion;
+		document.getElementById("infobox").innerHTML = "Region Name: "+region;//+"</br>Subregion Name: "+subregion;
 	if (marker != undefined) {
         mymap.removeLayer(marker);
     }
