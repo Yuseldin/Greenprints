@@ -1,0 +1,66 @@
+{
+  "_from": "leaflet-search@^2.9.0",
+  "_id": "leaflet-search@2.9.0",
+  "_inBundle": false,
+  "_integrity": "sha512-PIpxRh1C3Rpf2WkIkgHemv6cUKwIMo91pa90XD9ZWO27L8Z2zFRSutS7TvtD0CWByhpSZCDs18BMl61uuBoBeA==",
+  "_location": "/leaflet-search",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "leaflet-search@^2.9.0",
+    "name": "leaflet-search",
+    "escapedName": "leaflet-search",
+    "rawSpec": "^2.9.0",
+    "saveSpec": null,
+    "fetchSpec": "^2.9.0"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/leaflet-search/-/leaflet-search-2.9.0.tgz",
+  "_shasum": "8b3254c9693005fd08ca4e081edfd2bbb2872f06",
+  "_spec": "leaflet-search@^2.9.0",
+  "_where": "C:\\Users\\570X\\Documents\\Capstone2018\\Greenprints Local",
+  "author": {
+    "name": "Stefano Cudini",
+    "email": "stefano.cudini@gmail.com",
+    "url": "http://labs.easyblog.it/"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanocudini/leaflet-search/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "leaflet": "*"
+  },
+  "deprecated": false,
+  "description": "Leaflet Control for searching markers/features by attribute on map or remote searching in jsonp/ajax",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-cli": "~0.1.11",
+    "grunt-contrib-clean": "^0.5.0",
+    "grunt-contrib-concat": "^0.3.0",
+    "grunt-contrib-cssmin": "^0.7.0",
+    "grunt-contrib-jshint": "^0.7.2",
+    "grunt-contrib-uglify": "^0.2.7",
+    "grunt-contrib-watch": "^0.5.3",
+    "grunt-remove-logging": "^0.2.0",
+    "grunt-todos": "^0.2.0"
+  },
+  "homepage": "http://labs.easyblog.it/maps/leaflet-search/",
+  "keywords": [
+    "gis",
+    "map",
+    "leaflet"
+  ],
+  "license": "MIT",
+  "main": "dist/leaflet-search.src.js",
+  "name": "leaflet-search",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/stefanocudini/leaflet-search.git"
+  },
+  "version": "2.9.0"
+}
