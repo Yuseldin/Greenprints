@@ -12,9 +12,13 @@
 	<script src="map/RegionsJson.js"></script>
 </head>
 <body>
-	<div id="mapid"></div>
-	<div id="infobox" >Information about the bioregions to be displayed here</div>
-	
+	<div id="container">
+		<div id="mapid"></div>
+		<div id="infobox" >
+			<h2 id="region-name">Region Name</h2>
+			<p>Information about the bioregions to be displayed here</p>
+		</div>
+	</div>
 	
 	<script type="text/javascript">
 		var mymap = L.map('mapid').setView([-25.344490,	131.035431], 4);
@@ -38,7 +42,7 @@ function clickfunction(e) {
 	
 	var region = e.target.feature.properties.REG_NAME_7;
     var subregion = e.target.feature.properties.SUB_NAME_7;
-		document.getElementById("infobox").innerHTML = "Region Name: "+region;//+"</br>Subregion Name: "+subregion;
+		document.getElementById("region-name").innerHTML = region;
 	if (marker != undefined) {
         mymap.removeLayer(marker);
     }

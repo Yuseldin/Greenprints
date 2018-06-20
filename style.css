@@ -1,9 +1,19 @@
-#mapid { display:inline-block; height: 500px; width:800px;}
+#mapid { 
+	display:inline-block; 
+	height: 100%; 
+	width:800px;
+}
 #infobox{
     display: inline-block;
-    border: 1px black solid;
     position: relative;
-    height: 500px;
+    height: 100%;
     overflow: hidden;
     width: 700px;
+	padding:10px;
+	padding-left: 30px;
+}
+@media only screen and (min-width: 600px){
+	#container{
+		height:500px;
+	}
 }
