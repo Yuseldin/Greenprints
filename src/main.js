@@ -33,28 +33,29 @@ function clickfunction(e) {
 }
 
 /*
-    Remove in next commit
+    Searching features
 */
 // let searchCtlOption = {
-// 	url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
-// 	jsonpParam: 'json_callback',
-// 	propertyName: 'display_name',
-// 	propertyLoc: ['lat','lon'],
-// 	marker: L.marker([0,0]),
-// 	autoCollapse: true,
-// 	autoType: false,
-// 	minLength: 2,
-// 	zoom: 10
-// };
+//     layer: featuresLayer,
+//     propertyName: 'REG_NAME_7',
+//     marker:false,
+//     moveToLocation: (latLng, title, map) => {
+//         let zoom = myMap.getBoundsZoom(latLng.layer.getBounds());
+//         myMap.setView(latLng, zoom);
+//     }
+// }
 let searchCtlOption = {
-    layer: featuresLayer,
-    propertyName: 'REG_NAME_7',
-    marker:false,
-    moveToLocation: (latLng, title, map) => {
-        let zoom = myMap.getBoundsZoom(latLng.layer.getBounds());
-        myMap.setView(latLng, zoom);
-    }
-}
+	url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
+	jsonpParam: 'json_callback',
+	propertyName: 'display_name',
+	propertyLoc: ['lat','lon'],
+	marker: L.marker([0,0]),
+	autoCollapse: true,
+	autoType: false,
+	minLength: 2,
+	zoom: 10
+};
+
 
 
 let searchControl = new L.Control.Search(searchCtlOption);
