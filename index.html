@@ -20,39 +20,5 @@
 		</div>
 	</div>
 	
-	<script type="text/javascript">
-		var mymap = L.map('mapid').setView([-25.344490,	131.035431], 4);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'your.mapbox.access.token'
-}).addTo(mymap);
-
-L.geoJson(geojsonFeature, {
-    onEachFeature: handleFeature
-    }
-).addTo(mymap);
-
-function handleFeature(feature, layer) {
-   layer.on({click: clickfunction,});
-}
-var marker = {};
-function clickfunction(e) {
-	
-	var region = e.target.feature.properties.REG_NAME_7;
-    var subregion = e.target.feature.properties.SUB_NAME_7;
-		document.getElementById("region-name").innerHTML = region;
-	if (marker != undefined) {
-        mymap.removeLayer(marker);
-    }
-	marker = L.marker(e.latlng).addTo(mymap);
-	
-}
-
-
-	</script>
-	
-	<script type="text/javascript" src="search.js"></script>
-	
+	<script type="text/javascript" src="./src/main.js"></script>
 </body>
