@@ -15,7 +15,12 @@
 }
 
 .flex-1 {
-    flex-basis: 70%;
+	flex-basis: 70%;
+	z-index: 20;
+}
+
+.mapControl {
+	margin-bottom: .5rem;
 }
 
 #mapid { 
@@ -65,7 +70,6 @@
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	background-color: #888;
 }
-
 
 /* Inner map widget */
 .panel-container {

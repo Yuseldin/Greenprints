@@ -20,19 +20,24 @@
 			<h3 style="color:#555">Greenprints</h3>
 		</div>
 
-		<div class="container-flex" style="height:100%">
+		<div class="container-flex">
+			<div class="mapControl">
+				<div class="flex-1">
+					<button id="fullscreen" type="button" class="btn btn-info">
+							Full screen
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-flex middle" style="height:100%">
 
 			<div class="flex-1">
 				<div class="panel-container" style="height:100%">
-					<!-- <p class="{{panelOpen? 'panel-refresh': 'no-display'}}"><i class="fa fa-refresh" aria-hidden="true"></i></p> -->
-					<!-- <button class="{{panelOpen? 'panel-toggle-close': 'panel-toggle'}}" (click)="panelOpen = !panelOpen">
-						<span></span>
-					</button> -->
 					
-					<button id="panel-toggle" class="panel-toggle" onclick="panelOpen()">
+					<button id="panel-toggle" class="panel-toggle">
 						<span></span>
 					</button>
-					<!-- [ngStyle]="{'display': panelOpen? 'block': 'none'}" -->
 					<div id="panel-side" class="panel-side"> 
 						<div class="row">
 							<div class="col-10">

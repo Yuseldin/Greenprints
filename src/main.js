@@ -4,6 +4,7 @@ let initialized = false;
 
 function init() {
 	if (initialized) return;
+	initEvents();
 
 	const DEFAULT_LAT = -25.344490;
 	const DEFAULT_LNG = 131.035431;
@@ -70,8 +71,28 @@ function init() {
 	initialized = true;
 }
 
-function widgetControl() {
+function initEvents() {
+	document.getElementById("fullscreen").addEventListener("click", fullscreen)
 
+	document.getElementById("panel-toggle").addEventListener("click", panelOpen)
+}
+
+function fullscreen() {
+	// let container = document.getElementsByClassName("middle")[0];
+	// for(let i=0; i != container.children.length; ++i) container.children.item(i).style.height = "100%";
+
+	// document.getElementById("mapid").style.height = "100%";
+	// document.getElementsByClassName("information-display")[0].style.height = "100%";
+
+	let container = document.getElementsByClassName("panel-container")[0];
+	container.style.position = "absolute";
+	container.style.top = 0;
+	container.style.bottomm = 0;
+	container.style.right = 0;
+	container.style.left = 0;
+	let map = document.getElementById("mapid")
+	map.style.height = "100%";
+	map.style.width = "100%"
 }
 
 function panelOpen() {
@@ -88,4 +109,4 @@ function panelOpen() {
 
 init();
 
-
+// expose only init?
