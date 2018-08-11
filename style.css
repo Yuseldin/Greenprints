@@ -20,6 +20,7 @@
 
 #mapid { 
 	height: 70%; 
+	z-index: 1;
 }
 
 .flex-2 {
@@ -65,11 +66,94 @@
 	background-color: #888;
 }
 
+
+/* Inner map widget */
+.panel-container {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.panel-toggle {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+	width: 30px;
+	height: 30px;
+	background: none;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	transition: .40s;
+	z-index: 101;
+}
+
+.panel-toggle span {
+	width: 30px;
+	height: 3px;
+	background: #FFF;
+	position: absolute;
+	top: 0;
+	right: 0;
+	transition: .40s;
+}
+
+.panel-toggle span:before {
+	width: 30px;
+	height: 3px;
+	background: #FFF;
+	position: absolute;
+	top: 7px;
+	right: 0;
+	content: '';
+	transition: .40s;
+}
+  
+.panel-toggle span:after {
+	width: 30px;
+	height: 3px;
+	background: #FFF;
+	position: absolute;
+	top: 14px;
+	right: 0;
+	content: '';
+	transition: .40s;
+}
+
+.panel-side {
+	padding: 2px;
+	box-sizing: border-box;
+	width: 20vw;
+	height: 70%;
+	position: absolute;
+	top: 0;
+	right: 0;
+	color: #fff;
+	background-color: rgba(0, 0, 0, 0.6);
+	overflow: auto;
+	z-index: 100;
+}
+
+.panel-side h2 {
+	padding: 0 20px;
+	margin: 20px 0;
+}
+
+.panel-side ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
 @media (max-width: 575px) {
     .container {
         padding: 0;
-    }
-
+	}
+	
+	#mapid {
+		height: 100%;
+	}
+	
     .top {
         margin-top: 0.6rem;
         margin-bottom: 0.7rem;
