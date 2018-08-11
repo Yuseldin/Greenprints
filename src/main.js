@@ -4,11 +4,32 @@ const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
 
+
+
 //trying not to expose anything.
 (function(){
 
+	function sendRequest(args) {
+		return new Promise((resolve, reject) => {
+
+			let req = new XMLHttpRequest();
+			req.open(args.method, args.url);
+			req.send();
+
+			req.addEventListener("load", (e) => {
+				if (e.currentTarget.status == 200) return resolve(e.currentTarget.response);
+				reject(e.currentTarget.response);
+			})
+
+			req.addEventListener("error", (e) => {
+				reject("Error while retriving location information");
+			})
+
+		})
+	}
+
 	function main() {
-		this.initialized = false;
+		this.isInitialized = false;
 		this.map;
 	}
 
@@ -17,7 +38,7 @@ const DEFAULT_ZOOM = 4;
 	*/
 
 	main.prototype.init = function() {
-		if (this.initialized) return;
+		if (this.isInitialized) return;
 		
 		this.initEvents();
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
@@ -66,13 +87,14 @@ const DEFAULT_ZOOM = 4;
 
 		this.map.addControl( searchControl );
 
-		this.initialized = true;
+		this.isInitialized = true;
 	}
 
 
 	main.prototype.initEvents = function() {
 		document.getElementById("fullscreen").addEventListener("click", this.fullscreen.bind(this))
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
+		document.getElementById("geolocation").addEventListener("click", this.geolocation.bind(this))
 	}
 
 	main.prototype.fullscreen = function() {
@@ -86,6 +108,8 @@ const DEFAULT_ZOOM = 4;
 		let mapdiv = document.getElementById("mapid")
 		mapdiv.style.height = "100%";
 		mapdiv.style.width = "100%";
+
+		document.getElementById("panel-side").style.height = "100%";
 
 		this.map.invalidateSize();
 	}
@@ -101,6 +125,68 @@ const DEFAULT_ZOOM = 4;
 			toggle.className = "panel-toggle";
 			panel.style.display = "none"
 		}
+	}
+
+	main.prototype.geolocation = function() {
+		//	Add timeout, accuracy and max age options if needed.
+		if (this.isLocationOn) return;
+
+		/*
+		
+		*/
+		/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
+			this.gpsLocation(): 
+			this.ipLocation();
+		
+	}
+
+	main.prototype.gpsLocation = function() {
+		let options = {
+			enableHighAccuracy: true
+		};
+
+		if ("geolocation" in navigator) {
+			navigator.geolocation.getCurrentPosition((position) => {
+				console.log(position);
+				L.circle(
+					[position.coords.latitude, position.coords.longitude],
+					{ radius: 2000, color: "#000000", weight: 4 }
+				).addTo(this.map);
+				this.isLocationOn = true;
+			}, this.handleErrors, options);
+
+			navigator.geolocation.watchPosition((position) => {
+
+				// Update user position.
+
+			}, this.handleErrors, options);
+		} else {
+
+		}
+	}
+
+	main.prototype.ipLocation = function() {
+		const url = "http://api.ipstack.com/check?access_key=c7de56c920dfe9a06b36d80df9c287ac";
+
+		sendRequest({ method: "GET", url: url})
+		.then(response => {
+			response = JSON.parse(response);
+
+			L.circle(
+				[response.latitude, response.longitude],
+				{ radius: 2000, color: "#000000", weight: 4 }
+			).addTo(this.map);
+
+		}).catch((error) => {
+			console.log(error);
+			this.handleErrors(error);
+		})
+	}
+
+	main.prototype.handleErrors = function(error) {
+
+		// TODO
+
 	}
 
 	return new main();
