@@ -4,8 +4,6 @@ const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
 
-
-
 //trying not to expose anything.
 (function(){
 
@@ -31,6 +29,10 @@ const DEFAULT_ZOOM = 4;
 	function main() {
 		this.isInitialized = false;
 		this.map;
+		this.defaultStyle = {
+			fillColor: "#3388ff"
+		}
+		this.prevLayer;
 	}
 
 	/*
@@ -50,17 +52,23 @@ const DEFAULT_ZOOM = 4;
 			accessToken: 'your.mapbox.access.token'
 		}).addTo(this.map);
 
-		let featuresLayer = L.geoJson(geojsonFeature, { onEachFeature: handleFeature })
+		let featuresLayer = L.geoJson(geojsonFeature, { onEachFeature: handleFeature.bind(this) })
 		featuresLayer.addTo(this.map);
-
 		function handleFeature(feature, layer) {
-			layer.on({click: clickfunction,});
+			layer.on({click: clickfunction.bind(this),});
+			console.log(layer);
 		}
 
 		let marker = {};
 
 		function clickfunction(e) {
 			
+			if (this.prevLayer) this.prevLayer.setStyle(this.defaultStyle);
+
+			let layer = featuresLayer.getLayer(e.target._leaflet_id);
+			layer.setStyle({fillColor: "#ff832b"})
+			this.prevLayer = layer;
+
 			let region = e.target.feature.properties.REG_NAME_7;
 			let subregion = e.target.feature.properties.SUB_NAME_7;
 				document.getElementById("subregion-detail").innerHTML = region;

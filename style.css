@@ -92,6 +92,10 @@
 	z-index: 101;
 }
 
+.panel-toggle:focus {
+	outline: none;
+}
+
 .panel-toggle span {
 	width: 30px;
 	height: 3px;
@@ -136,6 +140,10 @@
 	cursor: pointer;
 	transition: .40s;
 	z-index: 101;
+}
+
+.panel-toggle-close:focus {
+	outline: none;
 }
 
 .panel-toggle-close span {
