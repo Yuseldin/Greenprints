@@ -29,14 +29,14 @@
 						<span></span>
 					</button> -->
 					
-					<button class="panel-toggle" (click)="panelOpen()">
+					<button id="panel-toggle" class="panel-toggle" onclick="panelOpen()">
 						<span></span>
 					</button>
 					<!-- [ngStyle]="{'display': panelOpen? 'block': 'none'}" -->
-					<div class="panel-side"> 
+					<div id="panel-side" class="panel-side"> 
 						<div class="row">
 							<div class="col-10">
-								<h5 class="ml-2 mr-2">Subregions Within View ({{subregions}})</h5>
+								<h5 class="ml-2 mr-2">Subregions Within View (0)</h5>
 							</div>
 						</div>
 						<ul id="subregion_list">
