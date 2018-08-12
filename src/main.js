@@ -22,8 +22,11 @@ const DEFAULT_ZOOM = 4;
 			req.addEventListener("error", (e) => {
 				reject("Error while retriving location information");
 			})
-
 		})
+	}
+
+	function sendRequests(args) {
+		return Promise.all(args.map(arg => sendRequest(arg)));
 	}
 
 	function main() {
@@ -33,6 +36,9 @@ const DEFAULT_ZOOM = 4;
 			fillColor: "#3388ff"
 		}
 		this.prevLayer;
+		this.apiQueryParams = {
+			radius: 5 // in km
+		}
 	}
 
 	/*
@@ -56,13 +62,11 @@ const DEFAULT_ZOOM = 4;
 		featuresLayer.addTo(this.map);
 		function handleFeature(feature, layer) {
 			layer.on({click: clickfunction.bind(this),});
-			console.log(layer);
 		}
 
 		let marker = {};
 
 		function clickfunction(e) {
-			
 			if (this.prevLayer) this.prevLayer.setStyle(this.defaultStyle);
 
 			let layer = featuresLayer.getLayer(e.target._leaflet_id);
@@ -77,6 +81,8 @@ const DEFAULT_ZOOM = 4;
 				this.map.removeLayer(marker);
 			}
 			marker = L.marker(e.latlng).addTo(this.map);
+
+			this.getBioInfo({lat: e.latlng.lat, lng: e.latlng.lng})
 		}
 
 		let searchCtlOption = {
@@ -145,7 +151,6 @@ const DEFAULT_ZOOM = 4;
 		/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
 			this.gpsLocation(): 
 			this.ipLocation();
-		
 	}
 
 	main.prototype.gpsLocation = function() {
@@ -188,6 +193,39 @@ const DEFAULT_ZOOM = 4;
 		}).catch((error) => {
 			console.log(error);
 			this.handleErrors(error);
+		})
+	}
+
+	main.prototype.getBioInfo = function(args) {
+		let base = "https://biocache.ala.org.au/ws/explore";
+		let lat = args.lat, lng = args.lng, radius = this.apiQueryParams.radius;
+		let groupsUrl = `${base}/groups.json?` +
+						`lat=${lat}&lon=${lng}&` +
+						`radius=${radius}&fq=geospatial_kosher%3Atrue&facets=species_group&qc=&_=1534039843703`
+
+		let animalsUrl = `${base}/group/Animals.json?` +
+				   `lat=${lat}&lon=${lng}` +
+				   `&radius=${radius}&fq=geospatial_kosher%3Atrue&qc=&pageSize=50&_=1534036317736`;
+		
+
+		sendRequest({method: "GET", url: groupsUrl})
+		.then((result) => {
+			console.log(`Lat: ${lat} Lng: ${lng}`)
+			console.log(result);
+
+			result = JSON.parse(result);
+
+			L.circle(
+				[lat, lng],
+				{ radius: radius * 1000, color: "#89ff77", weight: 1 }
+			).addTo(this.map);
+
+			let panel = document.getElementById("subregion-detail");
+			panel.innerHTML += `
+				<ul>
+					${result.map(info => `<li>${info.name} - ${info.speciesCount}</li>`).join('')}
+				</ul>
+			`
 		})
 	}
 
