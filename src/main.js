@@ -51,6 +51,12 @@ const DEFAULT_ZOOM = 4;
 		this.initEvents();
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
 
+		/* this.map = L.map('mapid', {
+			center: [DEFAULT_LAT, DEFAULT_LNG],
+			zoom: DEFAULT_ZOOM,
+			layers: [Regions, SubRegions]
+		}); */	
+ 
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
 			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 			maxZoom: 18,
@@ -85,56 +91,76 @@ const DEFAULT_ZOOM = 4;
 			this.getBioInfo({lat: e.latlng.lat, lng: e.latlng.lng})
 		} */
 		var client = new carto.Client({
-  apiKey: 'default_public',
-  username: 'yuseldin'
-});
+			apiKey: 'default_public',
+			username: 'yuseldin'
+		});
 
-const RegionsDataset = new carto.source.Dataset(`
-  ibra7_regions
-`);
-const RegionsStyle = new carto.style.CartoCSS(`
-  #layer {
-  
-    polygon-opacity: 0.5;
-    ::outline {
-      line-width: 2;
-      line-color: #FFFFFF;
-      line-opacity: 0.5;
-    }
-  }
-`);
-const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
-            featureClickColumns: ['reg_name_7']
-        });
+		const RegionsDataset = new carto.source.Dataset(`
+			ibra7_regions
+		`);
+		const RegionsStyle = new carto.style.CartoCSS(`
+		  #layer {
+			
+			
+			::outline {
+			  line-width: 2;
+			  line-color: #000000;
+			  line-opacity: 0.5;
+			}
+		  }
+		`);
+		const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
+					featureClickColumns: ['reg_name_7']
+				});
+				
 		
-const SubRegionsDataset = new carto.source.Dataset(`
-  ibra7_subregions
-`);
-const SubRegionsStyle = new carto.style.CartoCSS(`
-  #layer {
-  polygon-fill: #162945;
-    polygon-opacity: 0.5;
-    ::outline {
-      line-width: 1;
-      line-color: #FFFFFF;
-      line-opacity: 0.5;
-    }
-  }
-`);
-const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
-            featureClickColumns: ['sub_name_7']
-        });		
-	
-client.addLayers([SubRegions, Regions]);
-client.getLeafletLayer().addTo(this.map);
+		const SubRegionsDataset = new carto.source.Dataset(`
+			ibra7_subregions
+		`);
+		const SubRegionsStyle = new carto.style.CartoCSS(`
+		  #layer {
+			polygon-fill: #162945;
+			polygon-opacity: 0.5;
+			::outline {
+			  line-width: 1;
+			  line-color: #FFFFFF;
+			  line-opacity: 0.5;
+			}
+		  }
+		`);
+		const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
+					featureClickColumns: ['sub_name_7', 'reg_name_7']
+				});		
+			
+		client.addLayers([SubRegions, Regions]);
+		client.getLeafletLayer().addTo(this.map);
+		
+		Regions.on('featureClicked', featureEvent => {
+			let regionName = featureEvent.data.reg_name_7;
+			document.getElementById("subregion-detail").innerHTML = regionName;
+		});
+		SubRegions.on('featureClicked', featureEvent => {
+			let subregionName = featureEvent.data.sub_name_7;
+			let regionName = featureEvent.data.reg_name_7;
+			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName;
+		}); 
+		
+		
+		/**Layer control */
+		this.map.on('zoomend', function(){
+			let z = this.map.getZoom();
+			document.getElementById("subregion-detail").innerHTML = z;
+			if (z < 4) {
+				client.getLeafletLayer().removeFrom(this.map);
+			}
 
 
-Regions.on('featureClicked', featureEvent => {
-let subregionName = featureEvent.sub_name_7;
-let regionName = featureEvent.reg_name_7;
-document.getElementById("subregion-detail").innerHTML = regionName + subregionName;
-});
 
+		});
+		
+		/***/
+		
+		
 		let searchCtlOption = {
 			url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
 			jsonpParam: 'json_callback',
