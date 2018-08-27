@@ -99,13 +99,15 @@ const DEFAULT_ZOOM = 4;
 			ibra7_regions
 		`);
 		const RegionsStyle = new carto.style.CartoCSS(`
-		  #layer {
-			
-			
+		  #layer {		
 			::outline {
 			  line-width: 2;
 			  line-color: #000000;
 			  line-opacity: 0.5;
+			}
+			[zoom<6]{
+				polygon-fill: #162945;
+				polygon-opacity: 0.5;
 			}
 		  }
 		`);
@@ -119,12 +121,14 @@ const DEFAULT_ZOOM = 4;
 		`);
 		const SubRegionsStyle = new carto.style.CartoCSS(`
 		  #layer {
+			[zoom >=6]{
 			polygon-fill: #162945;
 			polygon-opacity: 0.5;
 			::outline {
 			  line-width: 1;
 			  line-color: #FFFFFF;
 			  line-opacity: 0.5;
+			}
 			}
 		  }
 		`);
@@ -137,26 +141,24 @@ const DEFAULT_ZOOM = 4;
 		
 		Regions.on('featureClicked', featureEvent => {
 			let regionName = featureEvent.data.reg_name_7;
-			document.getElementById("subregion-detail").innerHTML = regionName;
+			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName;
+			
 		});
 		SubRegions.on('featureClicked', featureEvent => {
 			let subregionName = featureEvent.data.sub_name_7;
 			let regionName = featureEvent.data.reg_name_7;
-			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName;
+			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
 		}); 
-		
-		
+				
 		/**Layer control */
-		this.map.on('zoomend', function(){
-			let z = this.map.getZoom();
-			document.getElementById("subregion-detail").innerHTML = z;
+		/* this.map.on('zoomend', function(){
+			var z = this.map.getZoom();
+			document.getElementById("subregion-detail").innerHTML +='<br>Zoom: '+z;
 			if (z < 4) {
 				client.getLeafletLayer().removeFrom(this.map);
 			}
 
-
-
-		});
+		}); */
 		
 		/***/
 		
