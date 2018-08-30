@@ -43,7 +43,8 @@
 
 .information-display .card-body {
     overflow:auto;
-    height: 35%;
+	height: 35%;
+	overflow:scroll;
 }
 
 .information-display .card-header p {
