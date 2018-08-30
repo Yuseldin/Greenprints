@@ -181,19 +181,13 @@ const DEFAULT_ZOOM = 4;
 			let parser = new DOMParser();
 			let xml = parser.parseFromString(result, 'text/xml');
 			let groupsZone = xml.querySelector("#groupsZone");
-			let tbody = parser.parseFromString(groupsZone.firstChild.data, 'text/xml');
-			console.log(tbody.childNodes.length);
+
+			let cdata = groupsZone.firstChild.data;
+
+			let tbody = parser.parseFromString(cdata.replace(/(\w+)=([\w-:]+)/g,  '$1="$2"'), 'text/xml');
 			let mammalsRow = tbody.querySelectorAll('[parent="Mammals-row"]');
-			window.tbody = tbody;
-			window.groupsZone = groupsZone;
-			window.asdfasdf = parser.parseFromString(`
-			<td class="level0">
-						
-			<i parent=asdf class="fa fa-chevron-right"></i>
-		
-		All Species
-	</td>`, 'text/xml')
-					
+			mammalsRow.forEach((r) => {console.log(r.childNodes[1].innerHTML)})
+
 		}).catch((e) => {
 			console.log(e);
 		})
