@@ -37,7 +37,7 @@ const DEFAULT_ZOOM = 4;
 		}
 		this.prevLayer;
 		this.apiQueryParams = {
-			radius: 5 // in km
+			radius: 50 // in km
 		}
 	}
 
@@ -50,12 +50,6 @@ const DEFAULT_ZOOM = 4;
 		
 		this.initEvents();
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
-
-		/* this.map = L.map('mapid', {
-			center: [DEFAULT_LAT, DEFAULT_LNG],
-			zoom: DEFAULT_ZOOM,
-			layers: [Regions, SubRegions]
-		}); */	
  
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
 			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -64,32 +58,6 @@ const DEFAULT_ZOOM = 4;
 			accessToken: 'your.mapbox.access.token'
 		}).addTo(this.map);
 
-		/* let featuresLayer = L.geoJson(geojsonFeature, { onEachFeature: handleFeature.bind(this) })
-		featuresLayer.addTo(this.map);
-		function handleFeature(feature, layer) {
-			layer.on({click: clickfunction.bind(this),});
-		}
-
-		let marker = {};
-
-		function clickfunction(e) {
-			if (this.prevLayer) this.prevLayer.setStyle(this.defaultStyle);
-
-			let layer = featuresLayer.getLayer(e.target._leaflet_id);
-			layer.setStyle({fillColor: "#ff832b"})
-			this.prevLayer = layer;
-
-			let region = e.target.feature.properties.REG_NAME_7;
-			let subregion = e.target.feature.properties.SUB_NAME_7;
-				document.getElementById("subregion-detail").innerHTML = region;
-				
-			if (marker != undefined) {
-				this.map.removeLayer(marker);
-			}
-			marker = L.marker(e.latlng).addTo(this.map);
-
-			this.getBioInfo({lat: e.latlng.lat, lng: e.latlng.lng})
-		} */
 		var client = new carto.Client({
 			apiKey: 'default_public',
 			username: 'yuseldin'
@@ -112,13 +80,13 @@ const DEFAULT_ZOOM = 4;
 		  }
 		`);
 		const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
-					featureClickColumns: ['reg_name_7']
-				});
+			featureClickColumns: ['reg_name_7']
+		});
 				
-		
 		const SubRegionsDataset = new carto.source.Dataset(`
 			ibra7_subregions
 		`);
+
 		const SubRegionsStyle = new carto.style.CartoCSS(`
 		  #layer {
 			[zoom >=6]{
@@ -132,18 +100,30 @@ const DEFAULT_ZOOM = 4;
 			}
 		  }
 		`);
+
 		const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
-					featureClickColumns: ['sub_name_7', 'reg_name_7']
-				});		
+			featureClickColumns: ['sub_name_7', 'reg_name_7']
+		});		
 			
 		client.addLayers([SubRegions, Regions]);
-		client.getLeafletLayer().addTo(this.map);
-		
-		Regions.on('featureClicked', featureEvent => {
-			let regionName = featureEvent.data.reg_name_7;
+		let leafletLayer = client.getLeafletLayer()
+		leafletLayer.addTo(this.map);
+
+		let marker = {};
+		Regions.on('featureClicked', e => {
+			let regionName = e.data.reg_name_7;
 			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName;
-			
+			this.getRegionInfo(regionName);
+
+			if (marker != undefined) {
+				this.map.removeLayer(marker);
+			}
+
+			marker = L.marker(e.latLng).addTo(this.map);
+
+			this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
 		});
+
 		SubRegions.on('featureClicked', featureEvent => {
 			let subregionName = featureEvent.data.sub_name_7;
 			let regionName = featureEvent.data.reg_name_7;
@@ -180,6 +160,43 @@ const DEFAULT_ZOOM = 4;
 		this.map.addControl( searchControl );
 
 		this.isInitialized = true;
+	}
+
+	main.prototype.getRegionInfo = function(regionName) {
+		let groupsUrl = `https://regions.ala.org.au/region/showGroups?\
+		regionFid=cl1048&regionType=Biogeographic+regions&regionName=Brigalow+Belt+South&\
+		regionPid=5746765&aazones=groupsZone&aatags=tbody`;
+
+		//Get g
+		let speciesUrl = `https://regions.ala.org.au/region/showSpecies?\
+		aazones=speciesZone&aatags=tbody&regionName=Nullarbor&regionType=\
+		Biogeographic+regions&regionFid=cl1048&regionPid=5746790&\
+		regionLayerName=ibra7_regions&group=Mammals&subgroup=&guid=&\
+		fq=species_subgroup:("Carnivorous+Marsupials"+OR+"Herbivorous+Marsupials"+OR+"Marsupial+Moles"+OR+"Bandicoots\u002c+Bilbies"+OR+"Monotremes"+OR+"Even-toed+hoofed"+OR+"Carnivores"+OR+"Dolphins\u002c+Porpoises\u002c+Whales"+OR+"Bats"+OR+"Hares\u002c+Pikas\u002c+Rabbits"+OR+"Rodents")&from=1850&to=2018&tab=speciesTab&q=cl1048%3A%22Nullarbor%22&qc=&hubFilter=&fq=rank:(species%20OR%20subspecies)&fq=-occurrence_status_s:absent&fq=geospatial_kosher:true&fq=occurrence_year:*&showHubData=false`;
+
+		console.log(`sending to ${groupsUrl}`);
+		sendRequest({method: "GET", url: groupsUrl})
+		.then((result) => {
+			console.log(result);
+			let parser = new DOMParser();
+			let xml = parser.parseFromString(result, 'text/xml');
+			let groupsZone = xml.querySelector("#groupsZone");
+			let tbody = parser.parseFromString(groupsZone.firstChild.data, 'text/xml');
+			console.log(tbody.childNodes.length);
+			let mammalsRow = tbody.querySelectorAll('[parent="Mammals-row"]');
+			window.tbody = tbody;
+			window.groupsZone = groupsZone;
+			window.asdfasdf = parser.parseFromString(`
+			<td class="level0">
+						
+			<i parent=asdf class="fa fa-chevron-right"></i>
+		
+		All Species
+	</td>`, 'text/xml')
+					
+		}).catch((e) => {
+			console.log(e);
+		})
 	}
 
 
@@ -288,8 +305,6 @@ const DEFAULT_ZOOM = 4;
 
 		sendRequest({method: "GET", url: groupsUrl})
 		.then((result) => {
-			console.log(`Lat: ${lat} Lng: ${lng}`)
-			console.log(result);
 
 			result = JSON.parse(result);
 
