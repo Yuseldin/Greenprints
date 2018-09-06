@@ -152,6 +152,10 @@ const DEFAULT_ZOOM = 4;
 					</div>
 				</div>`
 			})
+
+			this.regionDetailBodyAccordion.innerHTML += `<div class="card">
+				<div class="card-header text-center"><h5 class="mb-0"><b> + </b></h5> </div></div>
+			`;
 			
 			this.regionLoading.style.display = "none";
 		}).catch((e) => {
