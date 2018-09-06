@@ -1,5 +1,11 @@
 "use strict";
 
+/*
+	TODO:
+
+	Spawn a worker to incrementally load ala region data.
+*/
+
 const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
@@ -7,27 +13,10 @@ const DEFAULT_ZOOM = 4;
 //trying not to expose anything.
 (function(){
 
-	function sendRequest(args) {
-		return new Promise((resolve, reject) => {
-
-			let req = new XMLHttpRequest();
-			req.open(args.method, args.url);
-			req.send();
-
-			req.addEventListener("load", (e) => {
-				if (e.currentTarget.status == 200) return resolve(e.currentTarget.response);
-				reject(e.currentTarget.response);
-			})
-
-			req.addEventListener("error", (e) => {
-				reject("Error while retriving location information");
-			})
-		})
-	}
-
-	function sendRequests(args) {
-		return Promise.all(args.map(arg => sendRequest(arg)));
-	}
+	let {
+		sendRequest,
+		sendRequests
+	} = require("./utils.js");
 
 	function main() {
 		this.isInitialized = false;
@@ -39,6 +28,23 @@ const DEFAULT_ZOOM = 4;
 		this.apiQueryParams = {
 			radius: 50 // in km
 		}
+
+		this.detailElement = document.getElementById("subregion-detail");
+		this.regionDetailModal = document.getElementById("region-detail-modal");
+		this.regionDetailBody = document.getElementById("region-detail-body");
+		this.regionDetailTitle = document.getElementById("region-detail-title");
+		this.regionDetailBodyAccordion = document.getElementById("accordion");
+		this.regionLoading = document.getElementById("region-loading");
+
+		this.showMoreButton = document.createElement("button");
+		this.showMoreButton.id = "show-more-button";
+		this.showMoreButton.classList.add("btn", "btn-info");
+		this.showMoreButton.innerHTML = "More";
+
+		this.showMoreButton.addEventListener("click", () => {
+			this.toggleModal();
+			this.getRegionInfo();
+		});
 	}
 
 	/*
@@ -49,6 +55,111 @@ const DEFAULT_ZOOM = 4;
 		if (this.isInitialized) return;
 		
 		this.initEvents();
+		this.initMap();
+		this.initCarto();
+		this.initData();
+				
+		/**Layer control */
+		/* this.map.on('zoomend', function(){
+			var z = this.map.getZoom();
+			document.getElementById("subregion-detail").innerHTML +='<br>Zoom: '+z;
+			if (z < 4) {
+				client.getLeafletLayer().removeFrom(this.map);
+			}
+
+		}); */
+		
+		/***/	
+
+		this.isInitialized = true;
+	}
+
+	main.prototype.getRegionInfo = function() {	
+		let regionPid = this.alaRegionsMapping[this.currentRegionName].pid;
+		let groups = [
+			'Mammals',
+			'Birds',
+			'Amphibians'
+		];
+
+		this.regionDetailTitle.innerHTML = this.currentRegionName
+		
+		let groupsUrl = `https://regions.ala.org.au/region/showGroups?\
+		regionFid=cl1048&regionType=Biogeographic+regions&\
+		regionName=${this.currentRegionName.split(' ').join('+')}&regionPid=${regionPid}&aazones=groupsZone&aatags=tbody`;
+
+		let parser = new DOMParser();
+		this.regionLoading.style.display = "block";
+		sendRequest({method: "GET", url: groupsUrl})
+		.then((result) => {
+			let xml = parser.parseFromString(result, 'text/xml');
+			let groupsZone = xml.querySelector("#groupsZone");
+
+			let cdata = groupsZone.firstChild.data;
+
+			let tbody = parser.parseFromString(cdata.replace(/(\w+)=([\w-:]+)/g,  '$1="$2"'), 'text/xml');
+
+			let requests = groups.map((group) => 
+				new Promise((res, rej) => {
+					let mammalsRow = tbody.querySelectorAll(`[parent="${group}-row"]`);
+					let speciesSubgroup = [];
+					mammalsRow.forEach((r) => { speciesSubgroup.push(`"${r.childNodes[1].innerHTML.trim()}"`) });
+
+					let to = (new Date).getFullYear(), from = to - 10;
+					
+					let speciesSubgroupString = encodeURI(speciesSubgroup.join(' OR ')).replace(/,/g, '\\u002c');
+
+					//Species record with images.
+					let speciesUrl = `https://biocache.ala.org.au/ws/occurrences/search?q=cl1048:%22${this.currentRegionName.split(' ').join('%20')}%22&\
+					fq=species_subgroup:(${speciesSubgroupString})&\
+					fq=occurrence_year:[${from}-01-01T00:00:00Z%20TO%20${to}-12-31T23:59:59Z]&fq=rank:(species%20OR%20subspecies)&\
+					fq=-occurrence_status_s:absent&fq=geospatial_kosher:true&fq=occurrence_year:*&fq=multimedia:%22Image%22&pageSize=500`
+
+					sendRequest({method: "GET", url: speciesUrl})
+					.then(result => res({group, result}))
+				})
+			)
+
+			return Promise.all(requests);
+		}).then((results) => {
+			this.regionDetailBodyAccordion.innerHTML = ''
+			results.forEach(({group, result}) => {
+				result = JSON.parse(result);
+				let uniq = new Map();
+				result.occurrences.forEach(oc => {
+					if(oc.species == "Perameles nasuta") console.log(oc);
+					if (!uniq.has(oc.vernacularName)) uniq.set(oc.vernacularName, {
+						specie: oc.species || oc.raw_species, name: oc.vernacularName || oc.raw_vernacularName, image: oc.smallImageUrl});
+				});
+				let iterator = uniq.values();
+				this.regionDetailBodyAccordion.innerHTML += `<div class="card">
+					<div class="card-header" data-toggle="collapse" href="#${group}" aria-expanded="false"  aria-controls="${group}">
+						<h5 class="mb-0">
+							${group}
+						</h5>
+					</div>
+				
+					<div id="${group}" class="collapse">
+						<ul>
+						${function(){
+							let oc, li = [];
+							while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} | ${oc.image}</li>`);
+							return li.join('');
+						}()}
+						</ul>
+					</div>
+				</div>`
+			})
+
+			this.regionLoading.style.display = "none";
+		}).catch((e) => {
+			console.log(e);
+			console.log("Failed to retrieve region data");
+			this.handleErrors(e);
+		})
+	}
+
+	main.prototype.initMap = function() {
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
  
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
@@ -58,6 +169,24 @@ const DEFAULT_ZOOM = 4;
 			accessToken: 'your.mapbox.access.token'
 		}).addTo(this.map);
 
+		let searchCtlOption = {
+			url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
+			jsonpParam: 'json_callback',
+			propertyName: 'display_name',
+			propertyLoc: ['lat','lon'],
+			marker: L.marker([0,0]),
+			autoCollapse: true,
+			autoType: false,
+			minLength: 2,
+			zoom: 10
+		};
+
+		let searchControl = new L.Control.Search(searchCtlOption);
+
+		this.map.addControl( searchControl );
+	}
+
+	main.prototype.initCarto = function() {
 		var client = new carto.Client({
 			apiKey: 'default_public',
 			username: 'yuseldin'
@@ -106,98 +235,44 @@ const DEFAULT_ZOOM = 4;
 		});		
 			
 		client.addLayers([SubRegions, Regions]);
-		let leafletLayer = client.getLeafletLayer()
-		leafletLayer.addTo(this.map);
+		let leafletLayer = client.getLeafletLayer().addTo(this.map);
 
 		let marker = {};
 		Regions.on('featureClicked', e => {
-			let regionName = e.data.reg_name_7;
-			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName;
-			this.getRegionInfo(regionName);
+			this.currentRegionName = e.data.reg_name_7;
+			this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
 			if (marker != undefined) {
 				this.map.removeLayer(marker);
 			}
 
 			marker = L.marker(e.latLng).addTo(this.map);
+			marker.bindPopup(this.showMoreButton).openPopup();
 
-			this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
+			// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
 		});
 
 		SubRegions.on('featureClicked', featureEvent => {
 			let subregionName = featureEvent.data.sub_name_7;
 			let regionName = featureEvent.data.reg_name_7;
-			document.getElementById("subregion-detail").innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
+			this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
 		}); 
-				
-		/**Layer control */
-		/* this.map.on('zoomend', function(){
-			var z = this.map.getZoom();
-			document.getElementById("subregion-detail").innerHTML +='<br>Zoom: '+z;
-			if (z < 4) {
-				client.getLeafletLayer().removeFrom(this.map);
-			}
-
-		}); */
-		
-		/***/
-		
-		
-		let searchCtlOption = {
-			url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
-			jsonpParam: 'json_callback',
-			propertyName: 'display_name',
-			propertyLoc: ['lat','lon'],
-			marker: L.marker([0,0]),
-			autoCollapse: true,
-			autoType: false,
-			minLength: 2,
-			zoom: 10
-		};
-
-		let searchControl = new L.Control.Search(searchCtlOption);
-
-		this.map.addControl( searchControl );
-
-		this.isInitialized = true;
 	}
 
-	main.prototype.getRegionInfo = function(regionName) {
-		let groupsUrl = `https://regions.ala.org.au/region/showGroups?\
-		regionFid=cl1048&regionType=Biogeographic+regions&regionName=Brigalow+Belt+South&\
-		regionPid=5746765&aazones=groupsZone&aatags=tbody`;
+	main.prototype.initData = function() {
+		let alaRegionsUrl = `https://regions.ala.org.au/regions/regionList?type=Biogeographic regions`;
 
-		//Get g
-		let speciesUrl = `https://regions.ala.org.au/region/showSpecies?\
-		aazones=speciesZone&aatags=tbody&regionName=Nullarbor&regionType=\
-		Biogeographic+regions&regionFid=cl1048&regionPid=5746790&\
-		regionLayerName=ibra7_regions&group=Mammals&subgroup=&guid=&\
-		fq=species_subgroup:("Carnivorous+Marsupials"+OR+"Herbivorous+Marsupials"+OR+"Marsupial+Moles"+OR+"Bandicoots\u002c+Bilbies"+OR+"Monotremes"+OR+"Even-toed+hoofed"+OR+"Carnivores"+OR+"Dolphins\u002c+Porpoises\u002c+Whales"+OR+"Bats"+OR+"Hares\u002c+Pikas\u002c+Rabbits"+OR+"Rodents")&from=1850&to=2018&tab=speciesTab&q=cl1048%3A%22Nullarbor%22&qc=&hubFilter=&fq=rank:(species%20OR%20subspecies)&fq=-occurrence_status_s:absent&fq=geospatial_kosher:true&fq=occurrence_year:*&showHubData=false`;
-
-		console.log(`sending to ${groupsUrl}`);
-		sendRequest({method: "GET", url: groupsUrl})
+		sendRequest({method: "GET", url: alaRegionsUrl})
 		.then((result) => {
-			console.log(result);
-			let parser = new DOMParser();
-			let xml = parser.parseFromString(result, 'text/xml');
-			let groupsZone = xml.querySelector("#groupsZone");
-
-			let cdata = groupsZone.firstChild.data;
-
-			let tbody = parser.parseFromString(cdata.replace(/(\w+)=([\w-:]+)/g,  '$1="$2"'), 'text/xml');
-			let mammalsRow = tbody.querySelectorAll('[parent="Mammals-row"]');
-			mammalsRow.forEach((r) => {console.log(r.childNodes[1].innerHTML)})
-
-		}).catch((e) => {
-			console.log(e);
+			this.alaRegionsMapping = JSON.parse(result).objects;
 		})
 	}
-
 
 	main.prototype.initEvents = function() {
 		document.getElementById("fullscreen").addEventListener("click", this.fullscreen.bind(this))
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
 		document.getElementById("geolocation").addEventListener("click", this.geolocation.bind(this))
+		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
 	}
 
 	main.prototype.fullscreen = function() {
@@ -228,6 +303,21 @@ const DEFAULT_ZOOM = 4;
 			toggle.className = "panel-toggle";
 			panel.style.display = "none"
 		}
+	}
+
+	main.prototype.toggleModal = function() {
+		if (this.regionDetailModal.classList.contains("show")) {
+			this.regionDetailModal.classList.remove("show");
+			this.regionDetailModal.style.display = "none";
+			this.regionDetailBodyAccordion.innerHTML = ''
+		} else {
+			this.regionDetailModal.classList.add("show");
+			this.regionDetailModal.style.display = "block";
+		}
+	}
+
+	main.prototype.showMoreInfo = function() {
+
 	}
 
 	main.prototype.geolocation = function() {
@@ -299,20 +389,21 @@ const DEFAULT_ZOOM = 4;
 
 		sendRequest({method: "GET", url: groupsUrl})
 		.then((result) => {
-
 			result = JSON.parse(result);
-
-			L.circle(
+			if (this.circle) this.circle.removeFrom(this.map)
+			this.circle = L.circle(
 				[lat, lng],
 				{ radius: radius * 1000, color: "#89ff77", weight: 1 }
-			).addTo(this.map);
+			)
+			
+			this.circle.addTo(this.map);
 
-			let panel = document.getElementById("subregion-detail");
-			panel.innerHTML += `
-				<ul>
-					${result.map(info => `<li>${info.name} - ${info.speciesCount}</li>`).join('')}
-				</ul>
-			`
+			// let panel = document.getElementById("subregion-detail");
+			// panel.innerHTML += `
+			// 	<ul>
+			// 		${result.map(info => `<li>${info.name} - ${info.speciesCount}</li>`).join('')}
+			// 	</ul>
+			// `
 		})
 	}
 

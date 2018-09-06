@@ -1,0 +1,25 @@
+{
+  "name": "greenprints",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node node_modules/webpack-cli/bin/cli",
+    "watch": "node node_modules/webpack-cli/bin/cli -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuseldin/Greenprints.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yuseldin/Greenprints/issues"
+  },
+  "homepage": "https://github.com/Yuseldin/Greenprints#readme",
+  "devDependencies": {
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.1.0"
+  }
+}
