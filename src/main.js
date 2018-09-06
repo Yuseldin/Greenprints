@@ -127,7 +127,6 @@ const DEFAULT_ZOOM = 4;
 				result = JSON.parse(result);
 				let uniq = new Map();
 				result.occurrences.forEach(oc => {
-					if(oc.species == "Perameles nasuta") console.log(oc);
 					if (!uniq.has(oc.vernacularName)) uniq.set(oc.vernacularName, {
 						specie: oc.species || oc.raw_species, name: oc.vernacularName || oc.raw_vernacularName, image: oc.smallImageUrl});
 				});
@@ -143,14 +142,14 @@ const DEFAULT_ZOOM = 4;
 						<ul>
 						${function(){
 							let oc, li = [];
-							while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} | ${oc.image}</li>`);
+							while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} <img src="${oc.image}"></li>`);
 							return li.join('');
 						}()}
 						</ul>
 					</div>
 				</div>`
 			})
-
+			
 			this.regionLoading.style.display = "none";
 		}).catch((e) => {
 			console.log(e);
