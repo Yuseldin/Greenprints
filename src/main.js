@@ -130,6 +130,7 @@ const DEFAULT_ZOOM = 4;
 					if (!uniq.has(oc.vernacularName)) uniq.set(oc.vernacularName, {
 						specie: oc.species || oc.raw_species, name: oc.vernacularName || oc.raw_vernacularName, image: oc.smallImageUrl});
 				});
+				console.log(uniq.size);
 				let iterator = uniq.values();
 				this.regionDetailBodyAccordion.innerHTML += `<div class="card">
 					<div class="card-header" data-toggle="collapse" href="#${group}" aria-expanded="false"  aria-controls="${group}">
@@ -137,15 +138,17 @@ const DEFAULT_ZOOM = 4;
 							${group}
 						</h5>
 					</div>
-				
+					
 					<div id="${group}" class="collapse">
-						<ul>
-						${function(){
-							let oc, li = [];
-							while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} <img src="${oc.image}"></li>`);
-							return li.join('');
-						}()}
-						</ul>
+						${(uniq.size) ? 
+							`<ul>
+								${function(){
+									let oc, li = [];
+									while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} <img src="${oc.image}"></li>`);
+									return li.join('');
+								}()}
+							</ul>` : '0 occurrences of ' + group
+						}
 					</div>
 				</div>`
 			})
