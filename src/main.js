@@ -82,6 +82,8 @@ const DEFAULT_ZOOM = 4;
 			'Amphibians'
 		];
 
+		let timePeriod = 10;
+
 		this.regionDetailTitle.innerHTML = this.currentRegionName
 		
 		let groupsUrl = `https://regions.ala.org.au/region/showGroups?\
@@ -98,14 +100,14 @@ const DEFAULT_ZOOM = 4;
 			let cdata = groupsZone.firstChild.data;
 
 			let tbody = parser.parseFromString(cdata.replace(/(\w+)=([\w-:]+)/g,  '$1="$2"'), 'text/xml');
-
+			
 			let requests = groups.map((group) => 
 				new Promise((res, rej) => {
 					let mammalsRow = tbody.querySelectorAll(`[parent="${group}-row"]`);
 					let speciesSubgroup = [];
 					mammalsRow.forEach((r) => { speciesSubgroup.push(`"${r.childNodes[1].innerHTML.trim()}"`) });
 
-					let to = (new Date).getFullYear(), from = to - 10;
+					let to = (new Date).getFullYear(), from = to - timePeriod;
 					
 					let speciesSubgroupString = encodeURI(speciesSubgroup.join(' OR ')).replace(/,/g, '\\u002c');
 
@@ -122,7 +124,11 @@ const DEFAULT_ZOOM = 4;
 
 			return Promise.all(requests);
 		}).then((results) => {
-			this.regionDetailBodyAccordion.innerHTML = ''
+			this.regionDetailBodyAccordion.innerHTML = `
+			<h5>Animal occurrences</h5>
+			<p>Last ${timePeriod} years</p>
+			<hr/>
+			`;
 			results.forEach(({group, result}) => {
 				result = JSON.parse(result);
 				let uniq = new Map();
@@ -130,7 +136,7 @@ const DEFAULT_ZOOM = 4;
 					if (!uniq.has(oc.vernacularName)) uniq.set(oc.vernacularName, {
 						specie: oc.species || oc.raw_species, name: oc.vernacularName || oc.raw_vernacularName, image: oc.smallImageUrl});
 				});
-				console.log(uniq.size);
+
 				let iterator = uniq.values();
 				this.regionDetailBodyAccordion.innerHTML += `<div class="card">
 					<div class="card-header" data-toggle="collapse" href="#${group}" aria-expanded="false"  aria-controls="${group}">
@@ -141,7 +147,7 @@ const DEFAULT_ZOOM = 4;
 					
 					<div id="${group}" class="collapse">
 						${(uniq.size) ? 
-							`<ul>
+							`<ul style="list-style: none;">
 								${function(){
 									let oc, li = [];
 									while(oc = iterator.next().value) li.push(`<li>${oc.specie} | ${oc.name} <img src="${oc.image}"></li>`);
