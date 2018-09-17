@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node node_modules/webpack-cli/bin/cli",
     "watch": "node node_modules/webpack-cli/bin/cli -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test_integ": "./node_modules/mocha/bin/mocha ./dist/test_integ.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,10 @@
   },
   "homepage": "https://github.com/Yuseldin/Greenprints#readme",
   "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
     "webpack": "^4.17.1",
-    "webpack-cli": "^3.1.0"
+    "webpack-cli": "^3.1.0",
+    "xmlhttprequest": "^1.8.0"
   }
 }

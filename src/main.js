@@ -15,7 +15,9 @@ const DEFAULT_ZOOM = 4;
 
 	let {
 		sendRequest,
-		sendRequests
+		sendRequests,
+		getGpsLocation,
+		getIpLocation
 	} = require("./utils.js");
 
 	function main() {
@@ -27,6 +29,15 @@ const DEFAULT_ZOOM = 4;
 		this.prevLayer;
 		this.apiQueryParams = {
 			radius: 50 // in km
+		}
+
+		this.locationMarkerConfig = {
+			radius: 3000,
+			color: "#329fff", 
+			fillColor: "#0287fc",
+			fill: true,
+			fillOpacity: 1.0,
+			weight: 4
 		}
 
 		this.detailElement = document.getElementById("subregion-detail");
@@ -327,64 +338,32 @@ const DEFAULT_ZOOM = 4;
 			this.regionDetailModal.style.display = "block";
 		}
 	}
-
-	main.prototype.showMoreInfo = function() {
-
-	}
-
+	
 	main.prototype.geolocation = function() {
-		//	Add timeout, accuracy and max age options if needed.
 		if (this.isLocationOn) return;
 
-		/*
-		
-		*/
 		/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
 			this.gpsLocation(): 
 			this.ipLocation();
 	}
 
 	main.prototype.gpsLocation = function() {
-		let options = {
-			enableHighAccuracy: true
-		};
-
-		if ("geolocation" in navigator) {
-			navigator.geolocation.getCurrentPosition((position) => {
-				console.log(position);
-				L.circle(
-					[position.coords.latitude, position.coords.longitude],
-					{ radius: 2000, color: "#000000", weight: 4 }
-				).addTo(this.map);
-				this.isLocationOn = true;
-			}, this.handleErrors, options);
-
-			navigator.geolocation.watchPosition((position) => {
-
-				// Update user position.
-
-			}, this.handleErrors, options);
-		} else {
-
-		}
+		getGpsLocation().then(( coords ) => {
+			L.circle(
+				[coords.lat, coords.lng],
+				this.locationMarkerConfig
+			).addTo(this.map);
+			this.isLocationOn = true;
+		}, this.handleErrors.bind(this));
 	}
 
 	main.prototype.ipLocation = function() {
-		const url = "http://api.ipstack.com/check?access_key=c7de56c920dfe9a06b36d80df9c287ac";
-
-		sendRequest({ method: "GET", url: url})
-		.then(response => {
-			response = JSON.parse(response);
-
+		getIpLocation().then((coords) => {
 			L.circle(
-				[response.latitude, response.longitude],
-				{ radius: 2000, color: "#000000", weight: 4 }
+				[coords.lat, coords.lng],
+				this.locationMarkerConfig
 			).addTo(this.map);
-
-		}).catch((error) => {
-			console.log(error);
-			this.handleErrors(error);
-		})
+		}, this.handleErrors.bind(this))
 	}
 
 	main.prototype.getBioInfo = function(args) {

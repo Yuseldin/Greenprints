@@ -1,11 +1,21 @@
 let path = require('path');
 
-module.exports = {
+let web = {
     target: 'web',
-    entry: path.resolve(__dirname, './src/main.js'),
+    entry: {
+        'bundle': path.resolve(__dirname, './src/main.js')
+    }
+};
+
+let dev = {
+    target: 'node',
+    entry: {
+        'test_integ': path.resolve(__dirname, './tests/tests_integ.js')
+    },
     output: {
         path: path.resolve(__dirname, './dist'),
-        filename: 'bundle.js'
+        filename: '[name].js'
     }
-
 }
+
+module.exports = [web, dev];
