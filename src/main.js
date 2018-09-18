@@ -9,6 +9,7 @@
 const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
+const DEFAULT_MARKER_RADIUS = 30000;
 
 //trying not to expose anything.
 (function(){
@@ -22,17 +23,12 @@ const DEFAULT_ZOOM = 4;
 
 	function main() {
 		this.isInitialized = false;
-		this.map;
 		this.defaultStyle = {
 			fillColor: "#3388ff"
 		}
-		this.prevLayer;
-		this.apiQueryParams = {
-			radius: 50 // in km
-		}
 
 		this.locationMarkerConfig = {
-			radius: 3000,
+			radius: DEFAULT_MARKER_RADIUS,
 			color: "#329fff", 
 			fillColor: "#0287fc",
 			fill: true,
@@ -64,23 +60,10 @@ const DEFAULT_ZOOM = 4;
 
 	main.prototype.init = function() {
 		if (this.isInitialized) return;
-		
-		this.initEvents();
 		this.initMap();
+		this.initEvents();
 		this.initCarto();
-		this.initData();
-				
-		/**Layer control */
-		/* this.map.on('zoomend', function(){
-			var z = this.map.getZoom();
-			document.getElementById("subregion-detail").innerHTML +='<br>Zoom: '+z;
-			if (z < 4) {
-				client.getLeafletLayer().removeFrom(this.map);
-			}
-
-		}); */
-		
-		/***/	
+		this.initData();	
 
 		this.isInitialized = true;
 	}
@@ -184,7 +167,10 @@ const DEFAULT_ZOOM = 4;
 
 	main.prototype.initMap = function() {
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
- 
+		this.zoomLevels = {
+			start: this.map.getZoom(),
+			end: this.map.getZoom()
+		}
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
 			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 			maxZoom: 18,
@@ -296,6 +282,24 @@ const DEFAULT_ZOOM = 4;
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
 		document.getElementById("geolocation").addEventListener("click", this.geolocation.bind(this))
 		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
+
+		this.map.on('zoomstart', (e) => {
+			console.log('zoom start');
+			this.zoomLevels.start = this.map.getZoom();
+		});
+		
+		this.map.on('zoomend', (e) => {
+			console.log(this.circle.getRadius())
+			if (this.circle) {
+				this.zoomLevels.end = this.map.getZoom();
+				var diff = this.zoomLevels.start - this.zoomLevels.end;
+				if (diff > 0) {
+					this.circle.setRadius(this.circle.getRadius() * 2);
+				} else if (diff < 0) {
+					this.circle.setRadius(this.circle.getRadius() / 2);
+				}
+			}
+		});
 	}
 
 	main.prototype.fullscreen = function() {
@@ -341,7 +345,7 @@ const DEFAULT_ZOOM = 4;
 	
 	main.prototype.geolocation = function() {
 		if (this.isLocationOn) return;
-
+		this.isLocationOn = true;
 		/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
 			this.gpsLocation(): 
 			this.ipLocation();
@@ -349,21 +353,29 @@ const DEFAULT_ZOOM = 4;
 
 	main.prototype.gpsLocation = function() {
 		getGpsLocation().then(( coords ) => {
-			L.circle(
+			this.circle = L.circle(
 				[coords.lat, coords.lng],
 				this.locationMarkerConfig
-			).addTo(this.map);
-			this.isLocationOn = true;
-		}, this.handleErrors.bind(this));
+			);
+			this.circle.addTo(this.map);
+			
+		}, error => {
+			this.isLocationOn = false;
+			this.handleErrors(error);
+		});
 	}
 
 	main.prototype.ipLocation = function() {
 		getIpLocation().then((coords) => {
-			L.circle(
+			this.circle = L.circle(
 				[coords.lat, coords.lng],
 				this.locationMarkerConfig
-			).addTo(this.map);
-		}, this.handleErrors.bind(this))
+			)
+			this.circle.addTo(this.map);
+		}, error => {
+			this.isLocationOn = false;
+			this.handleErrors(error);
+		})
 	}
 
 	main.prototype.getBioInfo = function(args) {

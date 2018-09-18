@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { XMLHttpRequest } from 'xmlhttprequest';
 import * as utils from '../src/utils';
-
+//TODO - use mock server using sinon
 
 describe("integration", function(){
     global.XMLHttpRequest = XMLHttpRequest;
@@ -9,7 +9,7 @@ describe("integration", function(){
         let validUrl = 'http://www.google.com';
         let invalidUrl = 'http://www.vevwevw.c';
         describe("sendRequest", function(){
-
+            
             it("Should resolve with response", function(){
                 let args = {
                     method: 'GET',
