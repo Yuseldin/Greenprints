@@ -9,7 +9,7 @@
 const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
-const DEFAULT_MARKER_RADIUS = 30000;
+const DEFAULT_MARKER_RADIUS = 50000;
 
 //trying not to expose anything.
 (function(){
@@ -33,7 +33,7 @@ const DEFAULT_MARKER_RADIUS = 30000;
 			fillColor: "#0287fc",
 			fill: true,
 			fillOpacity: 1.0,
-			weight: 4
+			weight: 2
 		}
 
 		this.detailElement = document.getElementById("subregion-detail");
