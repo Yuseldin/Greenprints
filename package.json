@@ -25,5 +25,8 @@
     "webpack": "^4.17.1",
     "webpack-cli": "^3.1.0",
     "xmlhttprequest": "^1.8.0"
+  },
+  "dependencies": {
+    "leaflet-easybutton": "^2.3.0"
   }
 }
