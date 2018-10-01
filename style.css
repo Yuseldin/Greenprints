@@ -250,6 +250,15 @@ html, body, article, .entry-content, #root {
 	z-index: 9998;
 }
 
+.group-detail {
+	height: 400px;
+	overflow:scroll;
+}
+
+.fa-map-marker {
+	font-size: 23px !important;
+}
+
 .fade {
 	transition: opacity .15s linear;
 }

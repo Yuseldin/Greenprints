@@ -24,6 +24,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.defaultStyle = {
 			fillColor: "#3388ff"
 		}
+		this.showBioregions = true;
+		this.showSubBioregions = true;
 
 		this.detailElement = document.getElementById("subregion-detail");
 		this.regionDetailModal = document.getElementById("region-detail-modal");
@@ -39,7 +41,11 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 		this.showMoreButton.addEventListener("click", () => {
 			this.toggleModal();
-			this.getRegionInfo();
+			this.getRegionInfo([
+				'Mammals',
+				'Birds',
+				'Amphibians'
+			], false);
 		});
 	}
 
@@ -55,15 +61,14 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.initData();	
 
 		this.isInitialized = true;
+
+		document.getElementById("show-bioregions").checked = true;
+		document.getElementById("show-subregions").checked = true;
+
 	}
 
-	main.prototype.getRegionInfo = function() {	
+	main.prototype.getRegionInfo = function(groups, more) {	
 		let regionPid = this.alaRegionsMapping[this.currentRegionName].pid;
-		let groups = [
-			'Mammals',
-			'Birds',
-			'Amphibians'
-		];
 
 		let timePeriod = 10;
 
@@ -107,11 +112,15 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 			return Promise.all(requests);
 		}).then((results) => {
-			this.regionDetailBodyAccordion.innerHTML = `
-			<h5>Animal occurrences</h5>
-			<p>Last ${timePeriod} years</p>
-			<hr/>
-			`;
+			if (!more)
+			{
+				this.regionDetailBodyAccordion.innerHTML = `
+				<h5>Animal occurrences</h5>
+				<p>Last ${timePeriod} years</p>
+				<hr/>
+				`;
+			}
+			
 			results.forEach(({group, result}) => {
 				result = JSON.parse(result);
 				let uniq = new Map();
@@ -128,7 +137,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 						</h5>
 					</div>
 					
-					<div id="${group}" class="collapse">
+					<div id="${group}" class="group-detail collapse">
 						${(uniq.size) ? 
 							`<ul style="list-style: none;">
 								${function(){
@@ -142,9 +151,18 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				</div>`
 			})
 
-			this.regionDetailBodyAccordion.innerHTML += `<div class="card">
-				<div class="card-header text-center"><h5 class="mb-0"><b> + </b></h5> </div></div>
-			`;
+			if (!more)
+			{
+				this.regionDetailBodyAccordion.innerHTML += `<div id="more-animal-data" class="card">
+					<div class="card-header text-center"><h5 class="mb-0"><b> ... </b></h5> </div></div>
+				`;
+				let xcvzcvx = document.getElementById('more-animal-data');
+				
+				xcvzcvx.addEventListener('click', () => {
+					xcvzcvx.parentNode.removeChild(xcvzcvx);
+					this.getRegionInfo(["Plants", "Crustaceans", "Molluscs", "Fish"], true);
+				})
+			}
 			
 			this.regionLoading.style.display = "none";
 		}).catch((e) => {
@@ -187,7 +205,17 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 
 	main.prototype.initCarto = function() {
-		var client = new carto.Client({
+		var client1 = new carto.Client({
+			apiKey: 'default_public',
+			username: 'yuseldin'
+		});
+
+		var client2 = new carto.Client({
+			apiKey: 'default_public',
+			username: 'yuseldin'
+		});
+
+		var client3 = new carto.Client({
 			apiKey: 'default_public',
 			username: 'yuseldin'
 		});
@@ -233,9 +261,17 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
 			featureClickColumns: ['sub_name_7', 'reg_name_7']
 		});		
-			
-		client.addLayers([SubRegions, Regions]);
-		let leafletLayer = client.getLeafletLayer().addTo(this.map);
+		
+
+		client1.addLayers([SubRegions, Regions]);
+		this.bothLayer = client1.getLeafletLayer();
+		this.bothLayer.addTo(this.map);
+
+		client2.addLayer(Regions);
+		this.regionsLayer = client2.getLeafletLayer();
+		
+		client3.addLayer(SubRegions);
+		this.subRegionsLayer = client3.getLeafletLayer();
 
 		let marker = {};
 		Regions.on('featureClicked', e => {
@@ -271,6 +307,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	main.prototype.initEvents = function() {
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
 		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
+		document.getElementById("show-bioregions").addEventListener("click", this.toggleBioregion.bind(this));
+		document.getElementById("show-subregions").addEventListener("click", this.toggleSubBioregion.bind(this));
 	}
 
 	main.prototype.fullscreen = function() {
@@ -312,6 +350,43 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			this.regionDetailModal.classList.add("show");
 			this.regionDetailModal.style.display = "block";
 		}
+	}
+
+	main.prototype.toggleLayer = function() {
+		if (this.showBioregions && this.showSubBioregions)
+		{
+			this.regionsLayer.removeFrom(this.map);
+			this.subRegionsLayer.removeFrom(this.map);
+			this.bothLayer.addTo(this.map);
+		}
+		else if (!this.showBioregions && this.showSubBioregions)
+		{
+			this.regionsLayer.removeFrom(this.map);
+			this.bothLayer.removeFrom(this.map);
+			this.subRegionsLayer.addTo(this.map);
+		} 
+		else if (this.showBioregions && !this.showSubBioregions)
+		{
+			this.bothLayer.removeFrom(this.map);
+			this.subRegionsLayer.removeFrom(this.map);
+			this.regionsLayer.addTo(this.map);
+		}
+		else
+		{
+			this.bothLayer.removeFrom(this.map);
+			this.subRegionsLayer.removeFrom(this.map);
+			this.regionsLayer.removeFrom(this.map);
+		}
+	}
+
+	main.prototype.toggleBioregion = function() {
+		this.showBioregions = !this.showBioregions;
+		this.toggleLayer();
+	}
+
+	main.prototype.toggleSubBioregion = function() {
+		this.showSubBioregions = !this.showSubBioregions;
+		this.toggleLayer();
 	}
 
 	main.prototype.getBioInfo = function(args) {
