@@ -16,24 +16,13 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 	let {
 		sendRequest,
-		sendRequests,
-		getGpsLocation,
-		getIpLocation
+		sendRequests
 	} = require("./utils.js");
 
 	function main() {
 		this.isInitialized = false;
 		this.defaultStyle = {
 			fillColor: "#3388ff"
-		}
-
-		this.locationMarkerConfig = {
-			radius: DEFAULT_MARKER_RADIUS,
-			color: "#329fff", 
-			fillColor: "#0287fc",
-			fill: true,
-			fillOpacity: 1.0,
-			weight: 2
 		}
 
 		this.detailElement = document.getElementById("subregion-detail");
@@ -190,14 +179,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			zoom: 10
 		};
 
-
-		L.easyButton('fa-crosshairs', (btn, map) => {
-			this.geolocation();
-		}).addTo( this.map );
-
-		L.easyButton('fa-expand', (btn, map) => {
-			this.fullscreen();
-		}).addTo( this.map );
+		L.control.locate({flyTo: false, keepCurrentZoomLevel: true}).addTo(this.map);
 
 		let searchControl = new L.Control.Search(searchCtlOption);
 
@@ -289,24 +271,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	main.prototype.initEvents = function() {
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
 		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
-
-		this.map.on('zoomstart', (e) => {
-			console.log('zoom start');
-			this.zoomLevels.start = this.map.getZoom();
-		});
-		
-		this.map.on('zoomend', (e) => {
-			console.log(this.circle.getRadius())
-			if (this.circle) {
-				this.zoomLevels.end = this.map.getZoom();
-				var diff = this.zoomLevels.start - this.zoomLevels.end;
-				if (diff > 0) {
-					this.circle.setRadius(this.circle.getRadius() * 2);
-				} else if (diff < 0) {
-					this.circle.setRadius(this.circle.getRadius() / 2);
-				}
-			}
-		});
 	}
 
 	main.prototype.fullscreen = function() {
@@ -348,25 +312,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			this.regionDetailModal.classList.add("show");
 			this.regionDetailModal.style.display = "block";
 		}
-	}
-	
-	main.prototype.geolocation = function() {
-		if (this.isLocationOn) return;
-		this.isLocationOn = true;
-
-		(/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
-			getGpsLocation(): 
-			getIpLocation() ).then(( coords ) => {
-				console.log('using ip location');
-				this.circle = L.circle(
-					[coords.lat, coords.lng],
-					this.locationMarkerConfig
-				);
-				this.circle.addTo(this.map);
-			}, error => {
-				this.isLocationOn = false;
-				this.handleErrors(error);
-			})
 	}
 
 	main.prototype.getBioInfo = function(args) {
