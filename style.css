@@ -2,6 +2,14 @@ html, body, article, .entry-content, #root {
 	height: 100%;
 }
 
+button:hover {
+	background-color: rgba(0,0,0,0);
+}
+
+a:link {
+	text-decoration: none;
+}
+
 .container {
 	height: 100%;
     padding-right: 0px !important; 
