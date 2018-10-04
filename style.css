@@ -3,11 +3,11 @@ html, body, article, .entry-content, #root {
 }
 
 button:hover {
-	background-color: rgba(0,0,0,0);
+	background-color: rgba(0,0,0,0) !important;
 }
 
 a:link {
-	text-decoration: none;
+	text-decoration: none !important;
 }
 
 .container {
@@ -234,6 +234,10 @@ a:link {
 
 .modal-content {
 	height: 500px;
+}
+
+.modal-header {
+	height: 80;
 }
 
 #region-detail-modal {
