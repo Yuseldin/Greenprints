@@ -222,94 +222,101 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 
 	main.prototype.initCarto = function() {
-		var client1 = new carto.Client({
-			apiKey: 'default_public',
-			username: 'yuseldin'
-		});
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/regions.json'})
+		.then((data) => {
+			console.log(data)
+			let featuresLayer = L.geoJson(data)
+			featuresLayer.addTo(this.map);
+		})
+		
+		// var client1 = new carto.Client({
+		// 	apiKey: 'default_public',
+		// 	username: 'yuseldin'
+		// });
 
-		var client2 = new carto.Client({
-			apiKey: 'default_public',
-			username: 'yuseldin'
-		});
+		// var client2 = new carto.Client({
+		// 	apiKey: 'default_public',
+		// 	username: 'yuseldin'
+		// });
 
-		var client3 = new carto.Client({
-			apiKey: 'default_public',
-			username: 'yuseldin'
-		});
+		// var client3 = new carto.Client({
+		// 	apiKey: 'default_public',
+		// 	username: 'yuseldin'
+		// });
 
-		const RegionsDataset = new carto.source.Dataset(`
-			ibra7_regions
-		`);
-		const RegionsStyle = new carto.style.CartoCSS(`
-		  #layer {		
-			::outline {
-			  line-width: 2;
-			  line-color: #000000;
-			  line-opacity: 0.5;
-			}
-			[zoom<6]{
-				polygon-fill: #162945;
-				polygon-opacity: 0.5;
-			}
-		  }
-		`);
-		const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
-			featureClickColumns: ['reg_name_7']
-		});
+		// const RegionsDataset = new carto.source.Dataset(`
+		// 	ibra7_regions
+		// `);
+		// const RegionsStyle = new carto.style.CartoCSS(`
+		//   #layer {		
+		// 	::outline {
+		// 	  line-width: 2;
+		// 	  line-color: #000000;
+		// 	  line-opacity: 0.5;
+		// 	}
+		// 	[zoom<6]{
+		// 		polygon-fill: #162945;
+		// 		polygon-opacity: 0.5;
+		// 	}
+		//   }
+		// `);
+		// const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
+		// 	featureClickColumns: ['reg_name_7']
+		// });
 				
-		const SubRegionsDataset = new carto.source.Dataset(`
-			ibra7_subregions
-		`);
+		// const SubRegionsDataset = new carto.source.Dataset(`
+		// 	ibra7_subregions
+		// `);
 
-		const SubRegionsStyle = new carto.style.CartoCSS(`
-		  #layer {
-			[zoom >=6]{
-			polygon-fill: #162945;
-			polygon-opacity: 0.5;
-			::outline {
-			  line-width: 1;
-			  line-color: #FFFFFF;
-			  line-opacity: 0.5;
-			}
-			}
-		  }
-		`);
+		// const SubRegionsStyle = new carto.style.CartoCSS(`
+		//   #layer {
+		// 	[zoom >=6]{
+		// 	polygon-fill: #162945;
+		// 	polygon-opacity: 0.5;
+		// 	::outline {
+		// 	  line-width: 1;
+		// 	  line-color: #FFFFFF;
+		// 	  line-opacity: 0.5;
+		// 	}
+		// 	}
+		//   }
+		// `);
 
-		const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
-			featureClickColumns: ['sub_name_7', 'reg_name_7']
-		});		
+		// const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
+		// 	featureClickColumns: ['sub_name_7', 'reg_name_7']
+		// });		
 		
 
-		client1.addLayers([SubRegions, Regions]);
-		this.bothLayer = client1.getLeafletLayer();
-		this.bothLayer.addTo(this.map);
+		// client1.addLayers([SubRegions, Regions]);
+		// this.bothLayer = client1.getLeafletLayer();
+		// this.bothLayer.addTo(this.map);
 
-		client2.addLayer(Regions);
-		this.regionsLayer = client2.getLeafletLayer();
+		// client2.addLayer(Regions);
+		// this.regionsLayer = client2.getLeafletLayer();
 		
-		client3.addLayer(SubRegions);
-		this.subRegionsLayer = client3.getLeafletLayer();
+		// client3.addLayer(SubRegions);
+		// this.subRegionsLayer = client3.getLeafletLayer();
 
-		let marker = {};
-		Regions.on('featureClicked', e => {
-			this.currentRegionName = e.data.reg_name_7;
-			this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+		// let marker = {};
+		// Regions.on('featureClicked', e => {
+		// 	this.currentRegionName = e.data.reg_name_7;
+		// 	this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
-			if (marker != undefined) {
-				this.map.removeLayer(marker);
-			}
+		// 	if (marker != undefined) {
+		// 		this.map.removeLayer(marker);
+		// 	}
 
-			marker = L.marker(e.latLng).addTo(this.map);
-			marker.bindPopup(this.showMoreButton).openPopup();
+		// 	marker = L.marker(e.latLng).addTo(this.map);
+		// 	marker.bindPopup(this.showMoreButton).openPopup();
 
-			// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
-		});
+		// 	// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
+		// });
 
-		SubRegions.on('featureClicked', featureEvent => {
-			let subregionName = featureEvent.data.sub_name_7;
-			let regionName = featureEvent.data.reg_name_7;
-			this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
-		}); 
+		// SubRegions.on('featureClicked', featureEvent => {
+		// 	let subregionName = featureEvent.data.sub_name_7;
+		// 	let regionName = featureEvent.data.reg_name_7;
+		// 	this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
+		// }); 
 	}
 
 	main.prototype.initData = function() {

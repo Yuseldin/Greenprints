@@ -8,12 +8,12 @@ function sendRequest(args) {
         req.send();
 
         req.addEventListener("load", (e) => {
-            if (e.currentTarget.status == 200) return resolve(e.currentTarget.response);
+            if (e.currentTarget.status >= 200 && e.currentTarget.status < 300) return resolve(e.currentTarget.response);
             reject(e.currentTarget.response);
         })
 
         req.addEventListener("error", (e) => {
-            reject("Error while retriving location information");
+            reject(`Error in request/response: ${JSON.stringify(e)}`);
         })
     })
 }
