@@ -353,16 +353,15 @@ a:link {
 	}
 	
     .information-display {
-        height: 90%;
-        margin-bottom: 30px;
+        height: 95%;
     }
 
     .information-display .card-header {
-        height: 45%;
+        display:none;
     }
     
     .information-display .card-body {
-        height: 45%;
+        height: 90%;
 	}
 	
 	.panel-side {

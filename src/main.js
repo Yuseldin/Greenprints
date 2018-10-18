@@ -179,7 +179,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			end: this.map.getZoom()
 		}
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
-			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 			maxZoom: 18,
 			id: 'mapbox.streets',
 			accessToken: 'your.mapbox.access.token'
@@ -291,6 +290,9 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 			// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
 		});
+
+		window.regions = Regions;
+		window.regionsLayer = this.regionsLayer;
 
 		SubRegions.on('featureClicked', featureEvent => {
 			let subregionName = featureEvent.data.sub_name_7;
