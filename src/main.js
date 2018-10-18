@@ -91,10 +91,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			
 			let requests = groups.map((group) => 
 				new Promise((res, rej) => {
-					let mammalsRow = tbody.querySelectorAll(`[parent="${group}-row"]`);
+					let groupRow = tbody.querySelectorAll(`[parent="${group}-row"]`);
 					let speciesSubgroup = [];
-					mammalsRow.forEach((r) => { speciesSubgroup.push(`"${r.childNodes[1].innerHTML.trim()}"`) });
-
+					groupRow.forEach((r) => { speciesSubgroup.push(`"${r.childNodes[1].innerHTML.trim()}"`) });
+					if (!speciesSubgroup.length) return res({group, result: null});
 					let to = (new Date).getFullYear(), from = to - timePeriod;
 					
 					let speciesSubgroupString = encodeURI(speciesSubgroup.join(' OR ')).replace(/,/g, '\\u002c');
@@ -122,6 +122,20 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			}
 			
 			results.forEach(({group, result}) => {
+				if (!result) {
+					this.regionDetailBodyAccordion.innerHTML += `<div class="card">
+					<div class="card-header" data-toggle="collapse" href="#${group}" aria-expanded="false"  aria-controls="${group}">
+						<h5 class="mb-0">
+							${group}
+						</h5>
+					</div>
+					
+						<div id="${group}" class="group-detail collapse">
+							0 occurrences of ${group}
+						</div>
+					</div>`
+					return;
+				}
 				result = JSON.parse(result);
 				let uniq = new Map();
 				result.occurrences.forEach(oc => {
