@@ -199,6 +199,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 		L.control.locate({flyTo: false, keepCurrentZoomLevel: true}).addTo(this.map);
 
+		L.easyButton('fa-expand', (btn, map) => {
+			this.fullscreen();
+		}).addTo( this.map );
+
 		let searchControl = new L.Control.Search(searchCtlOption);
 
 		this.map.addControl( searchControl );
@@ -310,22 +314,38 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		document.getElementById("show-bioregions").addEventListener("click", this.toggleBioregion.bind(this));
 		document.getElementById("show-subregions").addEventListener("click", this.toggleSubBioregion.bind(this));
 	}
-
+	
 	main.prototype.fullscreen = function() {
-		//store these as states instead of querying.
-		let container = document.getElementsByClassName("panel-container")[0];
-		container.style.position = "fixed";
-		container.style.top = 0;
-		container.style.bottom = 0;
-		container.style.right = 0;
-		container.style.left = 0;
+		window.map = this.map
+		let container = document.getElementsByClassName("container-flex")[0];
 		let mapdiv = document.getElementById("mapid")
-		mapdiv.style.height = "100%";
-		mapdiv.style.width = "100%";
+		let infoDisplay = document.getElementsByClassName("information-display")[0];
+		let panelSide = document.getElementById("panel-side");
+		if (this.isFullScreen) {
+			this.isFullScreen = false;
+			container.style.position = 'relative';
+			container.style.width = '100%';
+			container.style.height = '100%';
+			mapdiv.style.height = '70%';
+			infoDisplay.style.height = "70%";
+			panelSide.style.height = "70%";
+		} else {
+			this.isFullScreen = true;
+			
+			container.style.position = "fixed";
+			container.style.top = 0;
+			container.style.bottom = 0;
+			container.style.right = 0;
+			container.style.left = 0;
+			
+			mapdiv.style.height = "100%";
+			infoDisplay.style.height = "100%";
 
-		document.getElementById("panel-side").style.height = "100%";
-
-		this.map.invalidateSize();
+			panelSide.style.height = "100%";
+			
+			this.map.invalidateSize();
+		}
+		this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
 	}
 
 	main.prototype.panelOpen = function() {

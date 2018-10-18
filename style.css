@@ -267,8 +267,18 @@ a:link {
 	overflow:scroll;
 }
 
+.leaflet-touch .leaflet-bar a:last-child {
+	padding:2px !important;
+}
+
 .fa-map-marker {
-	font-size: 23px !important;
+	font-size: 22px !important;
+}
+
+.fa-expand {
+	font-size: 19px !important;
+	display:block;
+	margin-top: 5px;
 }
 
 .fade {
