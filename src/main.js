@@ -291,9 +291,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
 		});
 
-		window.regions = Regions;
-		window.regionsLayer = this.regionsLayer;
-
 		SubRegions.on('featureClicked', featureEvent => {
 			let subregionName = featureEvent.data.sub_name_7;
 			let regionName = featureEvent.data.reg_name_7;
@@ -318,35 +315,53 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 	
 	main.prototype.fullscreen = function() {
-		window.map = this.map
 		let container = document.getElementsByClassName("container-flex")[0];
 		let mapdiv = document.getElementById("mapid")
 		let infoDisplay = document.getElementsByClassName("information-display")[0];
 		let panelSide = document.getElementById("panel-side");
-		if (this.isFullScreen) {
-			this.isFullScreen = false;
-			container.style.position = 'relative';
-			container.style.width = '100%';
-			container.style.height = '100%';
-			mapdiv.style.height = '70%';
-			infoDisplay.style.height = "70%";
-			panelSide.style.height = "70%";
-		} else {
-			this.isFullScreen = true;
-			
-			container.style.position = "fixed";
-			container.style.top = 0;
-			container.style.bottom = 0;
-			container.style.right = 0;
-			container.style.left = 0;
-			
-			mapdiv.style.height = "100%";
-			infoDisplay.style.height = "100%";
 
-			panelSide.style.height = "100%";
-			
-			this.map.invalidateSize();
-		}
+		/Android|webOS|iPhone|iPad|BlackBerry|Windows Phone|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent) ?
+			(() => {
+				container = document.getElementsByClassName("panel-container")[0];
+				if (this.isFullScreen) {
+					container.style.position = 'relative';
+					container.style.width = '100%';
+					container.style.height = '100%';
+					mapdiv.style.height = '100%';
+					panelSide.style.height = "100%";
+				} else {
+					container.style.position = "fixed";
+					container.style.top = 0;
+					container.style.bottom = 0;
+					container.style.right = 0;
+					container.style.left = 0;				
+					mapdiv.style.height = "100%";	
+					panelSide.style.height = "100%";	
+				}
+			})(): 
+			(() => {
+				if (this.isFullScreen) {
+					container.style.position = 'relative';
+					container.style.width = '100%';
+					container.style.height = '100%';
+					mapdiv.style.height = '70%';
+					infoDisplay.style.height = "70%";
+					panelSide.style.height = "70%";
+				} else {
+					container.style.position = "fixed";
+					container.style.top = 0;
+					container.style.bottom = 0;
+					container.style.right = 0;
+					container.style.left = 0;
+					
+					mapdiv.style.height = "100%";
+					infoDisplay.style.height = "100%";
+		
+					panelSide.style.height = "100%";	
+				}
+			})()
+		this.map.invalidateSize();
+		this.isFullScreen = !this.isFullScreen
 		this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
 	}
 
