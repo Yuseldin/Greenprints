@@ -222,31 +222,34 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 
 	main.prototype.initCarto = function() {
-		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/regions.json'})
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/RegionsJson.json'})
 		.then((data) => {
-			console.log(data)
-			let featuresLayer = L.geoJson(data)
+			let marker = {}
+			let featuresLayer = L.geoJson(JSON.parse(data), {
+				onEachFeature: (feature, layer) => {
+					layer.on({
+						click: (e) => {
+							this.currentRegionName = e.target.feature.properties.name;
+							this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+
+							if (marker != undefined) {
+								this.map.removeLayer(marker);
+							}
+
+							marker = L.marker(e.latlng).addTo(this.map);
+							marker.bindPopup(this.showMoreButton).openPopup();
+						}
+					});
+				},
+				style: {
+					"color": "#000000",
+					"weight": 2,
+					"opacity": 0.5
+				}
+			})
 			featuresLayer.addTo(this.map);
 		})
 		
-		// var client1 = new carto.Client({
-		// 	apiKey: 'default_public',
-		// 	username: 'yuseldin'
-		// });
-
-		// var client2 = new carto.Client({
-		// 	apiKey: 'default_public',
-		// 	username: 'yuseldin'
-		// });
-
-		// var client3 = new carto.Client({
-		// 	apiKey: 'default_public',
-		// 	username: 'yuseldin'
-		// });
-
-		// const RegionsDataset = new carto.source.Dataset(`
-		// 	ibra7_regions
-		// `);
 		// const RegionsStyle = new carto.style.CartoCSS(`
 		//   #layer {		
 		// 	::outline {
@@ -264,9 +267,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		// 	featureClickColumns: ['reg_name_7']
 		// });
 				
-		// const SubRegionsDataset = new carto.source.Dataset(`
-		// 	ibra7_subregions
-		// `);
 
 		// const SubRegionsStyle = new carto.style.CartoCSS(`
 		//   #layer {
