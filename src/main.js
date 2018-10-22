@@ -1,11 +1,5 @@
 "use strict";
 
-/*
-	TODO:
-
-	Spawn a worker to incrementally load ala region data.
-*/
-
 const DEFAULT_LAT = -25.344490;
 const DEFAULT_LNG = 131.035431;
 const DEFAULT_ZOOM = 4;
@@ -222,14 +216,14 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 
 	main.prototype.initCarto = function() {
-		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/RegionsJson.json'})
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/REGIONS.json'})
 		.then((data) => {
 			let marker = {}
-			let featuresLayer = L.geoJson(JSON.parse(data), {
+			this.featuresLayer_simple = L.geoJson(JSON.parse(data), {
 				onEachFeature: (feature, layer) => {
 					layer.on({
 						click: (e) => {
-							this.currentRegionName = e.target.feature.properties.name;
+							this.currentRegionName = e.target.feature.properties.n;
 							this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
 							if (marker != undefined) {
@@ -241,32 +235,84 @@ const DEFAULT_MARKER_RADIUS = 50000;
 						}
 					});
 				},
-				style: {
-					"color": "#000000",
-					"weight": 2,
-					"opacity": 0.5
+				style: (feature) => {
+					console.log(feature);
+					return {
+						color: `rgb(${feature.properties.rgb[0]}, ${feature.properties.rgb[1]}, ${feature.properties.rgb[2]})`,
+						weight: 1,
+						opacity: 0.5
+					}
 				}
 			})
-			featuresLayer.addTo(this.map);
+			this.featuresLayer_simple.addTo(this.map);
 		})
-		
-		// const RegionsStyle = new carto.style.CartoCSS(`
-		//   #layer {		
-		// 	::outline {
-		// 	  line-width: 2;
-		// 	  line-color: #000000;
-		// 	  line-opacity: 0.5;
-		// 	}
-		// 	[zoom<6]{
-		// 		polygon-fill: #162945;
-		// 		polygon-opacity: 0.5;
-		// 	}
-		//   }
-		// `);
-		// const Regions = new carto.layer.Layer(RegionsDataset, RegionsStyle, {
-		// 	featureClickColumns: ['reg_name_7']
+
+		// sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/simplified_subregions.json'})
+		// .then((data) => {
+		// 	let marker = {}
+		// 	this.featuresLayer_simple = L.geoJson(JSON.parse(data), {
+		// 		onEachFeature: (feature, layer) => {
+		// 			layer.on({
+		// 				click: (e) => {
+		// 					this.currentRegionName = e.target.feature.properties.n;
+		// 					this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+
+		// 					if (marker != undefined) {
+		// 						this.map.removeLayer(marker);
+		// 					}
+
+		// 					marker = L.marker(e.latlng).addTo(this.map);
+		// 					marker.bindPopup(this.showMoreButton).openPopup();
+		// 				}
+		// 			});
+		// 		},
+		// 		style: {
+		// 			"color": "#000000",
+		// 			"weight": 1,
+		// 			"opacity": 0.5
+		// 		}
+		// 	})
+		// 	this.featuresLayer_simple.addTo(this.map);
+		// })
+
+		// sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions.json'})
+		// .then((data) => {
+		// 	let marker = {}
+		// 	let featuresLayer = L.geoJson(JSON.parse(data), {
+		// 		onEachFeature: (feature, layer) => {
+		// 			layer.on({
+		// 				click: (e) => {
+		// 					this.currentRegionName = e.target.feature.properties.n;
+		// 					this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+
+		// 					if (marker != undefined) {
+		// 						this.map.removeLayer(marker);
+		// 					}
+
+		// 					marker = L.marker(e.latlng).addTo(this.map);
+		// 					marker.bindPopup(this.showMoreButton).openPopup();
+		// 				}
+		// 			});
+		// 		},
+		// 		style: {
+		// 			"color": "#000000",
+		// 			"weight": 1,
+		// 			"opacity": 0.5
+		// 		}
+		// 	})
+		// 	console.log('detailed subregions loaded');
+		// 	this.featuresLayer_simple.removeFrom(this.map);
+		// 	featuresLayer.addTo(this.map);
+		// })
+
+		// var client1 = new carto.Client({
+		// 	apiKey: 'default_public',
+		// 	username: 'yuseldin'
 		// });
-				
+
+		// const SubRegionsDataset = new carto.source.Dataset(`
+		// 	ibra7_subregions
+		// `);
 
 		// const SubRegionsStyle = new carto.style.CartoCSS(`
 		//   #layer {
@@ -280,43 +326,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		// 	}
 		// 	}
 		//   }
-		// `);
-
-		// const SubRegions = new carto.layer.Layer(SubRegionsDataset, SubRegionsStyle, {
-		// 	featureClickColumns: ['sub_name_7', 'reg_name_7']
-		// });		
-		
-
-		// client1.addLayers([SubRegions, Regions]);
-		// this.bothLayer = client1.getLeafletLayer();
-		// this.bothLayer.addTo(this.map);
-
-		// client2.addLayer(Regions);
-		// this.regionsLayer = client2.getLeafletLayer();
-		
-		// client3.addLayer(SubRegions);
-		// this.subRegionsLayer = client3.getLeafletLayer();
-
-		// let marker = {};
-		// Regions.on('featureClicked', e => {
-		// 	this.currentRegionName = e.data.reg_name_7;
-		// 	this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
-
-		// 	if (marker != undefined) {
-		// 		this.map.removeLayer(marker);
-		// 	}
-
-		// 	marker = L.marker(e.latLng).addTo(this.map);
-		// 	marker.bindPopup(this.showMoreButton).openPopup();
-
-		// 	// this.getBioInfo({lat: e.latLng.lat, lng: e.latLng.lng})
-		// });
-
-		// SubRegions.on('featureClicked', featureEvent => {
-		// 	let subregionName = featureEvent.data.sub_name_7;
-		// 	let regionName = featureEvent.data.reg_name_7;
-		// 	this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+regionName + '</br><strong>Sub-region: </strong>'+subregionName ;
-		// }); 
+		// `);; 
 	}
 
 	main.prototype.initData = function() {
