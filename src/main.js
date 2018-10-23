@@ -18,8 +18,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.defaultStyle = {
 			fillColor: "#3388ff"
 		}
-		this.showBioregions = true;
-		this.showSubBioregions = true;
+		this.alwaysShowBioregions = false;
+		this.alwaysShowSubBioregions = false;
+		this.hideBioregions = false;
+		this.hideSubBioregions = false;
 
 		this.detailElement = document.getElementById("subregion-detail");
 		this.regionDetailModal = document.getElementById("region-detail-modal");
@@ -55,10 +57,12 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.initData();	
 
 		this.isInitialized = true;
-
-		document.getElementById("show-bioregions").checked = true;
-		document.getElementById("show-subregions").checked = true;
-
+		this.zoomedIn = false;
+		this.currentZoom = DEFAULT_ZOOM
+		document.getElementById("show-bioregions").checked = false;
+		document.getElementById("show-subregions").checked = false;
+		document.getElementById("hide-bioregions").checked = false;
+		document.getElementById("hide-subregions").checked = false;
 	}
 
 	main.prototype.getRegionInfo = function(groups, more) {	
@@ -186,14 +190,21 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			start: this.map.getZoom(),
 			end: this.map.getZoom()
 		}
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?access_token={accessToken}', {
-			maxZoom: 18,
-			id: 'mapbox.streets',
-			accessToken: 'your.mapbox.access.token'
-		}).addTo(this.map);
+
+		var defaultLayer = L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(this.map);
+		let baseLayers = {
+			'OpenStreetMap Default': defaultLayer,
+			'Esri.WorldStreetMap': L.tileLayer.provider('Esri.WorldStreetMap'),
+			'Esri WorldImagery': L.tileLayer.provider('Esri.WorldImagery'),
+			"NASAGIBS": L.tileLayer.provider('NASAGIBS.ViirsEarthAtNight2012')
+		}
+
+		let overlayLayers = {}
+
+		L.control.layers(baseLayers, overlayLayers, {collapsed: true, position: 'bottomleft'}).addTo(this.map);
 
 		let searchCtlOption = {
-			url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
+			url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
 			jsonpParam: 'json_callback',
 			propertyName: 'display_name',
 			propertyLoc: ['lat','lon'],
@@ -215,118 +226,112 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.map.addControl( searchControl );
 	}
 
-	main.prototype.initCarto = function() {
-		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/REGIONS.json'})
-		.then((data) => {
+	main.prototype.handleGeoJson = function(data, onEachFeature, style) {
+		return new Promise((res, rej) => {
 			let marker = {}
-			this.featuresLayer_simple = L.geoJson(JSON.parse(data), {
-				onEachFeature: (feature, layer) => {
-					layer.on({
-						click: (e) => {
-							this.currentRegionName = e.target.feature.properties.n;
-							this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+			res(
+				L.geoJson(JSON.parse(data), {
+					onEachFeature: onEachFeature,
+					style: (feature) => {
+						return Object.assign(style ? style: {}, {
+							fillColor: `rgb(${feature.properties.rgb[0]}, ${feature.properties.rgb[1]}, ${feature.properties.rgb[2]})`
+						})
+					}
+				})
+			)
+		})
+	}
 
-							if (marker != undefined) {
-								this.map.removeLayer(marker);
-							}
+	main.prototype.onEachFeatureRegions = function(feature, layer) {
+		layer.on({
+			click: (e) => {
+				this.currentRegionName = e.target.feature.properties.n;
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
-							marker = L.marker(e.latlng).addTo(this.map);
-							marker.bindPopup(this.showMoreButton).openPopup();
+				if (marker != undefined) {
+					this.map.removeLayer(marker);
+				}
+
+				marker = L.marker(e.latlng).addTo(this.map);
+				marker.bindPopup(this.showMoreButton).openPopup();
+			}
+		});
+	}
+
+	main.prototype.onEachFeatureSubRegions = function(feature, layer) {
+		layer.on({
+			click: (e) => {
+				this.currentRegionName = e.target.feature.properties.n;
+				this.detailElement.innerHTML = '<strong>Sub-bioregion: </strong>'+this.currentRegionName;
+
+				if (marker != undefined) {
+					this.map.removeLayer(marker);
+				}
+
+				marker = L.marker(e.latlng).addTo(this.map);
+			}
+		});
+	}
+
+
+	main.prototype.initCarto = function() {
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/regions.json'})
+		.then((data) => this.handleGeoJson(data, this.onEachFeatureRegions.bind(this), {
+			color: '#333',
+			weight: 1.5,
+			opacity: 1,
+			fillOpacity: 0.4
+		}))
+		.then((layer) => {
+			this.regions = layer;
+			this.regions.addTo(this.map)
+		})
+
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions_simplified.json'})
+		.then((data) => this.handleGeoJson(data, this.onEachFeatureSubRegions.bind(this), {
+			color: '#333',
+			weight: 1,
+			opacity: 0.5,
+			fillOpacity: 0.2
+		}))
+		.then((layer) => {
+			this.subregions_simple = layer;
+			this.map.on('zoomend', (e) => {
+				this.currentZoom = this.map.getZoom();
+				if (this.currentZoom > 6) {
+					if (!this.zoomedIn) {
+						this.zoomedIn = true;
+						if (!this.alwaysShowBioregions) this.map.removeLayer(this.regions);
+						if (!this.hideSubBioregions) {
+							this.subregions_simple ? this.subregions_simple.addTo(this.map)
+												: this.subregions.addTo(this.map)
 						}
-					});
-				},
-				style: (feature) => {
-					console.log(feature);
-					return {
-						color: `rgb(${feature.properties.rgb[0]}, ${feature.properties.rgb[1]}, ${feature.properties.rgb[2]})`,
-						weight: 1,
-						opacity: 0.5
+					}
+				} else {
+					if (this.zoomedIn) {
+						this.zoomedIn = false;
+						if (!this.alwaysShowSubBioregions) {
+							this.subregions_simple ? this.map.removeLayer(this.subregions_simple) :  this.map.removeLayer(this.subregions)
+						}
+						if (!this.hideBioregions)this.regions.addTo(this.map);
 					}
 				}
 			})
-			this.featuresLayer_simple.addTo(this.map);
+			if (this.alwaysShowSubBioregions) this.subregions_simple.addTo(this.map);
 		})
 
-		// sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/simplified_subregions.json'})
-		// .then((data) => {
-		// 	let marker = {}
-		// 	this.featuresLayer_simple = L.geoJson(JSON.parse(data), {
-		// 		onEachFeature: (feature, layer) => {
-		// 			layer.on({
-		// 				click: (e) => {
-		// 					this.currentRegionName = e.target.feature.properties.n;
-		// 					this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
-
-		// 					if (marker != undefined) {
-		// 						this.map.removeLayer(marker);
-		// 					}
-
-		// 					marker = L.marker(e.latlng).addTo(this.map);
-		// 					marker.bindPopup(this.showMoreButton).openPopup();
-		// 				}
-		// 			});
-		// 		},
-		// 		style: {
-		// 			"color": "#000000",
-		// 			"weight": 1,
-		// 			"opacity": 0.5
-		// 		}
-		// 	})
-		// 	this.featuresLayer_simple.addTo(this.map);
-		// })
-
-		// sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions.json'})
-		// .then((data) => {
-		// 	let marker = {}
-		// 	let featuresLayer = L.geoJson(JSON.parse(data), {
-		// 		onEachFeature: (feature, layer) => {
-		// 			layer.on({
-		// 				click: (e) => {
-		// 					this.currentRegionName = e.target.feature.properties.n;
-		// 					this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
-
-		// 					if (marker != undefined) {
-		// 						this.map.removeLayer(marker);
-		// 					}
-
-		// 					marker = L.marker(e.latlng).addTo(this.map);
-		// 					marker.bindPopup(this.showMoreButton).openPopup();
-		// 				}
-		// 			});
-		// 		},
-		// 		style: {
-		// 			"color": "#000000",
-		// 			"weight": 1,
-		// 			"opacity": 0.5
-		// 		}
-		// 	})
-		// 	console.log('detailed subregions loaded');
-		// 	this.featuresLayer_simple.removeFrom(this.map);
-		// 	featuresLayer.addTo(this.map);
-		// })
-
-		// var client1 = new carto.Client({
-		// 	apiKey: 'default_public',
-		// 	username: 'yuseldin'
-		// });
-
-		// const SubRegionsDataset = new carto.source.Dataset(`
-		// 	ibra7_subregions
-		// `);
-
-		// const SubRegionsStyle = new carto.style.CartoCSS(`
-		//   #layer {
-		// 	[zoom >=6]{
-		// 	polygon-fill: #162945;
-		// 	polygon-opacity: 0.5;
-		// 	::outline {
-		// 	  line-width: 1;
-		// 	  line-color: #FFFFFF;
-		// 	  line-opacity: 0.5;
-		// 	}
-		// 	}
-		//   }
-		// `);; 
+		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions.json'})
+		.then((data) => this.handleGeoJson(data, this.onEachFeatureSubRegions.bind(this), {
+			color: '#333',
+			weight: 1,
+			opacity: 0.5,
+			fillOpacity: 0.2
+		}))
+		.then((layer) => {
+			this.subregions = layer;
+			console.log('detailed subregions loaded')
+			if (this.alwaysShowSubBioregions) this.subregions.addTo(this.map);
+		})
 	}
 
 	main.prototype.initData = function() {
@@ -343,6 +348,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
 		document.getElementById("show-bioregions").addEventListener("click", this.toggleBioregion.bind(this));
 		document.getElementById("show-subregions").addEventListener("click", this.toggleSubBioregion.bind(this));
+		document.getElementById("hide-bioregions").addEventListener("click", this.hideBioregion.bind(this));
+		document.getElementById("hide-subregions").addEventListener("click", this.hideSubBioregion.bind(this));
 	}
 	
 	main.prototype.fullscreen = function() {
@@ -421,40 +428,41 @@ const DEFAULT_MARKER_RADIUS = 50000;
 	}
 
 	main.prototype.toggleLayer = function() {
-		if (this.showBioregions && this.showSubBioregions)
-		{
-			this.regionsLayer.removeFrom(this.map);
-			this.subRegionsLayer.removeFrom(this.map);
-			this.bothLayer.addTo(this.map);
-		}
-		else if (!this.showBioregions && this.showSubBioregions)
-		{
-			this.regionsLayer.removeFrom(this.map);
-			this.bothLayer.removeFrom(this.map);
-			this.subRegionsLayer.addTo(this.map);
-		} 
-		else if (this.showBioregions && !this.showSubBioregions)
-		{
-			this.bothLayer.removeFrom(this.map);
-			this.subRegionsLayer.removeFrom(this.map);
-			this.regionsLayer.addTo(this.map);
-		}
-		else
-		{
-			this.bothLayer.removeFrom(this.map);
-			this.subRegionsLayer.removeFrom(this.map);
-			this.regionsLayer.removeFrom(this.map);
-		}
+		if (!this.regions || (!this.subregions_simple && !this.subregion)) return;
+		console.log(`alwaysShowSubBioregions: ${this.alwaysShowSubBioregions}`)
+		console.log(`alwaysShowBioregions: ${this.alwaysShowBiorsegions}`)
+		if (this.alwaysShowSubBioregions) this.subregions_simple ? this.subregions_simple.addTo(this.map) : this.subregions.addTo(this.map);
+		if (this.alwaysShowBioregions) this.regions.addTo(this.map);
+		if (!this.alwaysShowSubBioregions && this.currentZoom <= 6) this.map.removeLayer(this.subregions_simple ? this.subregions_simple: this.subregions);
+		if (!this.alwaysShowBioregions && this.currentZoom > 6) this.map.removeLayer(this.regions);
 	}
 
 	main.prototype.toggleBioregion = function() {
-		this.showBioregions = !this.showBioregions;
+		this.alwaysShowBioregions = !this.alwaysShowBioregions;
 		this.toggleLayer();
 	}
 
 	main.prototype.toggleSubBioregion = function() {
-		this.showSubBioregions = !this.showSubBioregions;
+		this.alwaysShowSubBioregions = !this.alwaysShowSubBioregions;
 		this.toggleLayer();
+	}
+
+	main.prototype.hideBioregion = function() {
+		this.hideBioregions = !this.hideBioregions;
+		if (this.hideBioregions) {
+			this.map.removeLayer(this.regions);
+		} else if (this.currentZoom <= 6 || this.alwaysShowBioregions) {
+			this.regions.addTo(this.map);
+		}
+	}
+
+	main.prototype.hideSubBioregion = function() {
+		this.hideSubBioregions = !this.hideSubBioregions;
+		if (this.hideSubBioregions) {
+			this.map.removeLayer(this.subregions_simple ? this.subregions_simple : this.subregions)
+		} else if (this.currentZoom > 6 || this.alwaysShowSubBioregions) {
+			this.subregions_simple ? this.subregions_simple.addTo(this.map) : this.subregions.addTo(this.map)
+		}
 	}
 
 	main.prototype.getBioInfo = function(args) {
