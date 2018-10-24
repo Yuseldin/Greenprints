@@ -249,8 +249,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 				sendRequest({method: 'GET', url: `https://www.greenprints.org.au/wp-json/wp/v2/posts?search=${encodeURI(`"${this.currentRegionName}"`)}`})
 				.then((result) => {
-					console.log('Got region data');
-					console.log(result);
+					let data = JSON.parse(result);
+
+					let rendered = data[0].content.rendered;
+					this.detailElement.innerHTML += rendered
 				})
 				
 				if (this.marker != undefined) {
@@ -274,6 +276,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				.then((result) => {
 					let data = result[0];
 					
+					// let rendered = JSON.parse(data).content.rendered;
+					// this.detailElement.innerHTML += rendered
 				})
 				if (this.currentSubRegionName) {
 					
