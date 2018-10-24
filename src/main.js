@@ -201,7 +201,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 		let overlayLayers = {}
 
-		L.control.layers(baseLayers, overlayLayers, {collapsed: true, position: 'bottomleft'}).addTo(this.map);
+		L.control.layers(baseLayers, overlayLayers, {collapsed: true, position: 'bottomright'}).addTo(this.map);
 
 		let searchCtlOption = {
 			url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
@@ -228,7 +228,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 	main.prototype.handleGeoJson = function(data, onEachFeature, style) {
 		return new Promise((res, rej) => {
-			let marker = {}
 			res(
 				L.geoJson(JSON.parse(data), {
 					onEachFeature: onEachFeature,
@@ -248,12 +247,12 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.currentRegionName = e.target.feature.properties.n;
 				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
-				if (marker != undefined) {
-					this.map.removeLayer(marker);
+				if (this.marker != undefined) {
+					this.map.removeLayer(this.marker);
 				}
 
-				marker = L.marker(e.latlng).addTo(this.map);
-				marker.bindPopup(this.showMoreButton).openPopup();
+				this.marker = L.marker(e.latlng).addTo(this.map);
+				this.marker.bindPopup(this.showMoreButton).openPopup();
 			}
 		});
 	}
@@ -262,13 +261,18 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		layer.on({
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
-				this.detailElement.innerHTML = '<strong>Sub-bioregion: </strong>'+this.currentRegionName;
-
-				if (marker != undefined) {
-					this.map.removeLayer(marker);
+				this.currentSubRegionName = e.target.feature.properties.sub_n;
+				console.log(e.target.feature.properties)
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+				if (this.currentSubRegionName) {
+					this.detailElement.innerHTML += '<br/>' + '<strong>Sub-bioregion: </strong>'+this.currentSubRegionName;
+				}
+				if (this.marker != undefined) {
+					this.map.removeLayer(this.marker);
 				}
 
-				marker = L.marker(e.latlng).addTo(this.map);
+				this.marker = L.marker(e.latlng).addTo(this.map);
+				this.marker.bindPopup(this.showMoreButton).openPopup();
 			}
 		});
 	}
