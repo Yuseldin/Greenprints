@@ -247,20 +247,22 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.currentRegionName = e.target.feature.properties.n;
 				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
-				sendRequest({method: 'GET', url: `https://www.greenprints.org.au/wp-json/wp/v2/posts?search=${encodeURI(`"${this.currentRegionName}"`)}`})
-				.then((result) => {
-					let data = JSON.parse(result);
-
-					let rendered = data[0].content.rendered;
-					this.detailElement.innerHTML += rendered
-				})
-				
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
 				}
 
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
+				
+				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
+				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
+				sendRequest({method: 'GET', url})
+				.then((result) => {
+					let data = JSON.parse(result);
+
+					let rendered = data[0].content.rendered;
+					this.detailElement.innerHTML += rendered
+				})
 			}
 		});
 	}
@@ -272,13 +274,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.currentSubRegionName = e.target.feature.properties.sub_n;
 				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
-				sendRequest({method: 'GET', url: `https://www.greenprints.org.au/wp-json/wp/v2/posts?search=${encodeURI(`"${this.currentRegionName}"`)}`})
-				.then((result) => {
-					let data = result[0];
-					
-					// let rendered = JSON.parse(data).content.rendered;
-					// this.detailElement.innerHTML += rendered
-				})
 				if (this.currentSubRegionName) {
 					
 					this.detailElement.innerHTML += '<br/>' + '<strong>Sub-bioregion: </strong>'+this.currentSubRegionName;
@@ -286,6 +281,15 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
 				}
+				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
+				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
+				sendRequest({method: 'GET', url})
+				.then((result) => {
+					let data = JSON.parse(result);
+
+					let rendered = data[0].content.rendered;
+					this.detailElement.innerHTML += rendered
+				})
 
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
