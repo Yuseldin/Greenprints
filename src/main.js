@@ -253,6 +253,34 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
+				
+				var ourRequest = new XMLHttpRequest();
+				ourRequest.open('GET', 'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&search='+this.currentRegionName);
+				ourRequest.onload = function(){
+					if(ourRequest.status >= 200 && ourRequest.status < 400){
+						var data = JSON.parse(ourRequest.responseText);
+						var HTMLstring = '';
+
+						for (var i = 0; i < data.length; i++){
+							//HTMLstring += '<h2>' + data[i].title.rendered + '</h2>';
+							HTMLstring += data[i].content.rendered;
+						
+						}
+						
+						document.getElementById("subregion-detail").innerHTML += HTMLstring;
+						
+					} else {
+						console.log("Conected to the server, but it returend an error.");
+					}
+					//
+				};
+			
+
+			ourRequest.onerror = function() {
+				console.log("Connection error");
+			};
+			
+			ourRequest.send();
 			}
 		});
 	}
