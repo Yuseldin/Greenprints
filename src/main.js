@@ -247,6 +247,12 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.currentRegionName = e.target.feature.properties.n;
 				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
 
+				sendRequest({method: 'GET', url: `https://www.greenprints.org.au/wp-json/wp/v2/posts?search=${encodeURI(`"${this.currentRegionName}"`)}`})
+				.then((result) => {
+					console.log('Got region data');
+					console.log(result);
+				})
+				
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
 				}
@@ -262,9 +268,15 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
 				this.currentSubRegionName = e.target.feature.properties.sub_n;
-				console.log(e.target.feature.properties)
 				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+
+				sendRequest({method: 'GET', url: `https://www.greenprints.org.au/wp-json/wp/v2/posts?search=${encodeURI(`"${this.currentRegionName}"`)}`})
+				.then((result) => {
+					let data = result[0];
+					
+				})
 				if (this.currentSubRegionName) {
+					
 					this.detailElement.innerHTML += '<br/>' + '<strong>Sub-bioregion: </strong>'+this.currentSubRegionName;
 				}
 				if (this.marker != undefined) {
