@@ -245,7 +245,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		layer.on({
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
-				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong><hr/>'+this.currentRegionName;
 
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
@@ -272,11 +272,11 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
 				this.currentSubRegionName = e.target.feature.properties.sub_n;
-				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName;
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong><hr/>'+this.currentRegionName;
 
 				if (this.currentSubRegionName) {
 					
-					this.detailElement.innerHTML += '<br/>' + '<strong>Sub-bioregion: </strong>'+this.currentSubRegionName;
+					this.detailElement.innerHTML += '<strong>Sub-bioregion: </strong><hr/>'+this.currentSubRegionName;
 				}
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
