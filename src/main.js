@@ -22,7 +22,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.alwaysShowSubBioregions = false;
 		this.hideBioregions = false;
 		this.hideSubBioregions = false;
-
+		this.data = {};
 		this.detailElement = document.getElementById("subregion-detail");
 		this.regionDetailModal = document.getElementById("region-detail-modal");
 		this.regionDetailBody = document.getElementById("region-detail-body");
@@ -256,13 +256,30 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				
 				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
 				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
-				sendRequest({method: 'GET', url})
-				.then((result) => {
-					let data = JSON.parse(result);
-					if (!data.length) this.detailElement.innerHTML += '<p>This region currently has no information</p>'
-					let rendered = data[0].content.rendered;
-					this.detailElement.innerHTML += rendered
-				})
+				
+				if (!this.data[titlePostRegion]) this.data[titlePostRegion] = {};
+				if (this.data[titlePostRegion].loading == true) return;
+
+				if (this.data[titlePostRegion].data) {
+					this.detailElement.innerHTML += this.data[titlePostRegion].data
+				} else {
+					this.data[titlePostRegion].loading = true;
+
+					sendRequest({method: 'GET', url})
+					.then((result) => {
+						let data = JSON.parse(result);
+						if (!data.length) {
+							this.detailElement.innerHTML += '<p>This region currently has no information</p>'
+						} else {
+							this.data[titlePostRegion].data = data[0].content.rendered;
+							this.detailElement.innerHTML += this.data[titlePostRegion].data
+						}
+						
+						this.data[titlePostRegion].loading = false;
+					}, () => {
+						this.data[titlePostRegion].loading = false;
+					})
+				}
 			}
 		});
 	}
@@ -283,14 +300,29 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				}
 				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
 				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
-				sendRequest({method: 'GET', url})
-				.then((result) => {
-					let data = JSON.parse(result);
-					if (!data.length) this.detailElement.innerHTML += '<p>This region currently has no information</p>'
+				if (!this.data[titlePostRegion]) this.data[titlePostRegion] = {};
+				if (this.data[titlePostRegion].loading == true) return;
 
-					let rendered = data[0].content.rendered;
-					this.detailElement.innerHTML += rendered
-				})
+				if (this.data[titlePostRegion].data) {
+					this.detailElement.innerHTML += this.data[titlePostRegion].data
+				} else {
+					this.data[titlePostRegion].loading = true;
+
+					sendRequest({method: 'GET', url})
+					.then((result) => {
+						let data = JSON.parse(result);
+						if (!data.length) {
+							this.detailElement.innerHTML += '<p>This region currently has no information</p>'
+						} else {
+							this.data[titlePostRegion].data = data[0].content.rendered;
+							this.detailElement.innerHTML += this.data[titlePostRegion].data
+						}
+						this.data[titlePostRegion].loading = false;
+					}, () => {
+						this.data[titlePostRegion].loading = false;
+					})
+				}
+				
 
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
