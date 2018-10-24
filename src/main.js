@@ -245,7 +245,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		layer.on({
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
-				this.detailElement.innerHTML = '<strong>Bioregion: </strong><hr/>'+this.currentRegionName;
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName+'<hr/>';
 
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
@@ -259,7 +259,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				sendRequest({method: 'GET', url})
 				.then((result) => {
 					let data = JSON.parse(result);
-
+					if (!data.length) this.detailElement.innerHTML += '<p>This region currently has no information</p>'
 					let rendered = data[0].content.rendered;
 					this.detailElement.innerHTML += rendered
 				})
@@ -272,11 +272,11 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			click: (e) => {
 				this.currentRegionName = e.target.feature.properties.n;
 				this.currentSubRegionName = e.target.feature.properties.sub_n;
-				this.detailElement.innerHTML = '<strong>Bioregion: </strong><hr/>'+this.currentRegionName;
+				this.detailElement.innerHTML = '<strong>Bioregion: </strong>'+this.currentRegionName+'<hr/>';
 
 				if (this.currentSubRegionName) {
 					
-					this.detailElement.innerHTML += '<strong>Sub-bioregion: </strong><hr/>'+this.currentSubRegionName;
+					this.detailElement.innerHTML += '<strong>Sub-bioregion: </strong>'+this.currentSubRegionName+'<hr/>';
 				}
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
@@ -286,6 +286,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				sendRequest({method: 'GET', url})
 				.then((result) => {
 					let data = JSON.parse(result);
+					if (!data.length) this.detailElement.innerHTML += '<p>This region currently has no information</p>'
 
 					let rendered = data[0].content.rendered;
 					this.detailElement.innerHTML += rendered
