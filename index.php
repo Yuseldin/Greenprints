@@ -34,11 +34,11 @@ require('head.php');
 							</li>	
 							<li>
 								<input type="checkbox" id="hide-bioregions">
-								<label for="bioregions">hide bioregions</label>
+								<label for="bioregions">Hide bioregions</label>
 							</li>
 							<li >
 								<input type="checkbox" id="hide-subregions">
-								<label for="subregions">hide sub-bioregions</label>
+								<label for="subregions">Hide sub-bioregions</label>
 							</li>						 
 							</ul>
 						</div>

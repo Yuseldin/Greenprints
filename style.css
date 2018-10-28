@@ -395,3 +395,6 @@ a:link {
 #colophon{
 	display:none;
 }
+button.easy-button-button.leaflet-bar-part.leaflet-interactive.unnamed-state-active {
+    padding: 0;
+}
