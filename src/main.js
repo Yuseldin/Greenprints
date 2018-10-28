@@ -269,7 +269,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 					.then((result) => {
 						let data = JSON.parse(result);
 						if (!data.length) {
-							this.detailElement.innerHTML += '<p>This region currently has no information</p>'
+							this.detailElement.innerHTML += '<p>This region currently has no information. You can add information about this bioregion <a href="/submit-bioregions">here</a>.</p>'
 						} else {
 							this.data[titlePostRegion].data = data[0].content.rendered;
 							this.detailElement.innerHTML += this.data[titlePostRegion].data
@@ -312,7 +312,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 					.then((result) => {
 						let data = JSON.parse(result);
 						if (!data.length) {
-							this.detailElement.innerHTML += '<p>This region currently has no information</p>'
+							this.detailElement.innerHTML += '<p>This region currently has no information. You can add information about this bioregion <a href="/submit-bioregions">here</a>.</p>'
 						} else {
 							this.data[titlePostRegion].data = data[0].content.rendered;
 							this.detailElement.innerHTML += this.data[titlePostRegion].data
