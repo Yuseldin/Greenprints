@@ -232,6 +232,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 		L.control.layers(baseLayers, overlayLayers, {collapsed: true, position: 'bottomright'}).addTo(this.map);
 
+		//search function
 		let searchCtlOption = {
 			url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
 			jsonpParam: 'json_callback',
@@ -255,7 +256,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.map.addControl( searchControl );
 	}
 	
-	//handler for geojson data.
+	//handler for geojson data. Randomize colors
 	main.prototype.handleGeoJson = function(data, onEachFeature, style) {
 		return new Promise((res, rej) => {
 			res(
@@ -367,6 +368,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 	//Get geojson for the layers
 	main.prototype.initCarto = function() {
+		//Add Regions layer
 		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/regions.json'})
 		.then((data) => this.handleGeoJson(data, this.onEachFeatureRegions.bind(this), {
 			color: '#333',
@@ -378,7 +380,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			this.regions = layer;
 			this.regions.addTo(this.map)
 		})
-
+		
+		//Add Subregions layer and setting visibility depending on zoom level
 		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions_simplified.json'})
 		.then((data) => this.handleGeoJson(data, this.onEachFeatureSubRegions.bind(this), {
 			color: '#333',
@@ -411,7 +414,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			})
 			if (this.alwaysShowSubBioregions) this.subregions_simple.addTo(this.map);
 		})
-
+		//Subregions layer with names of subregions
 		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/subregions.json'})
 		.then((data) => this.handleGeoJson(data, this.onEachFeatureSubRegions.bind(this), {
 			color: '#333',
@@ -446,6 +449,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		document.getElementById("hide-subregions").addEventListener("click", this.hideSubBioregion.bind(this));
 	}
 	
+	//fullscreen styling 
 	main.prototype.fullscreen = function() {
 		let container = document.getElementsByClassName("container-flex")[0];
 		let mapdiv = document.getElementById("mapid")
@@ -522,6 +526,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		}
 	}
 
+	//toggle function that gets called from each toggle
 	main.prototype.toggleLayer = function() {
 		if (!this.regions || (!this.subregions_simple && !this.subregion)) return;
 		console.log(`alwaysShowSubBioregions: ${this.alwaysShowSubBioregions}`)
@@ -531,17 +536,17 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		if (!this.alwaysShowSubBioregions && this.currentZoom <= 6) this.map.removeLayer(this.subregions_simple ? this.subregions_simple: this.subregions);
 		if (!this.alwaysShowBioregions && this.currentZoom > 6) this.map.removeLayer(this.regions);
 	}
-
+	//always show region toggle
 	main.prototype.toggleBioregion = function() {
 		this.alwaysShowBioregions = !this.alwaysShowBioregions;
 		this.toggleLayer();
 	}
-
+	//allways show subregion toggle
 	main.prototype.toggleSubBioregion = function() {
 		this.alwaysShowSubBioregions = !this.alwaysShowSubBioregions;
 		this.toggleLayer();
 	}
-
+	//hide regions toggle
 	main.prototype.hideBioregion = function() {
 		this.hideBioregions = !this.hideBioregions;
 		if (this.hideBioregions) {
@@ -550,7 +555,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			this.regions.addTo(this.map);
 		}
 	}
-
+	//hide subregion toggle
 	main.prototype.hideSubBioregion = function() {
 		this.hideSubBioregions = !this.hideSubBioregions;
 		if (this.hideSubBioregions) {
