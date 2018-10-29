@@ -271,7 +271,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		})
 	}
 
-	//Handler for click events for each feature in geojson layer
+	//Handler for click events for each feature in geojson layer (Regions)
 	main.prototype.onEachFeatureRegions = function(feature, layer) {
 		layer.on({
 			click: (e) => {
@@ -285,6 +285,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
 				
+				//Get information from posts about bioregions
 				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
 				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
 				
@@ -315,6 +316,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		});
 	}
 	
+	//Handler for click events for each feature in geojson layer (Sub-regions)
 	main.prototype.onEachFeatureSubRegions = function(feature, layer) {
 		layer.on({
 			click: (e) => {
@@ -333,6 +335,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				this.marker = L.marker(e.latlng).addTo(this.map);
 				this.marker.bindPopup(this.showMoreButton).openPopup();
 
+				//Get information from posts about bioregions
 				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
 				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
 				if (!this.data[titlePostRegion]) this.data[titlePostRegion] = {};
