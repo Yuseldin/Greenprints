@@ -25,7 +25,7 @@ require('head.php');
 						<div id="controls">
 							<ul>
 							<li>
-								<input type="checkbox" id="show-bioregions">
+								<input type="checkbox" checked id="show-bioregions">
 								<label for="bioregions">Always show bioregions</label>
 							</li>
 							<li >

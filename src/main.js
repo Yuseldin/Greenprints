@@ -22,7 +22,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.defaultStyle = {
 			fillColor: "#3388ff"
 		}
-		this.alwaysShowBioregions = false;
+		this.alwaysShowBioregions = true;
 		this.alwaysShowSubBioregions = false;
 		this.hideBioregions = false;
 		this.hideSubBioregions = false;
@@ -62,7 +62,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.isInitialized = true;
 		this.zoomedIn = false;
 		this.currentZoom = DEFAULT_ZOOM
-		document.getElementById("show-bioregions").checked = false;
+		document.getElementById("show-bioregions").checked = true;
 		document.getElementById("show-subregions").checked = false;
 		document.getElementById("hide-bioregions").checked = false;
 		document.getElementById("hide-subregions").checked = false;
@@ -206,7 +206,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		var defaultLayer = L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(this.map);
 
 		/**
-		 * 
+		 * ref: https://github.com/leaflet-extras/leaflet-providers
 		 */
 		let baseLayers = {
 			'OpenStreetMap Default': defaultLayer,
@@ -223,10 +223,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			"NASAGIBS": L.tileLayer.provider('NASAGIBS.ViirsEarthAtNight2012'),
 			'OpenStreetMap Black and White': L.tileLayer.provider('OpenStreetMap.BlackAndWhite'),
 			'OpenStreetMap H.O.T.': L.tileLayer.provider('OpenStreetMap.HOT'),
-			'Thunderforest OpenCycleMap': L.tileLayer.provider('Thunderforest.OpenCycleMap'),
-			'Thunderforest Transport': L.tileLayer.provider('Thunderforest.Transport'),
-			'Thunderforest Landscape': L.tileLayer.provider('Thunderforest.Landscape'),
-			'Hydda Full': L.tileLayer.provider('Hydda.Full'),
 			'Stamen Toner': L.tileLayer.provider('Stamen.Toner'),
 			'Stamen Terrain': L.tileLayer.provider('Stamen.Terrain'),
 			'Stamen Watercolor': L.tileLayer.provider('Stamen.Watercolor')
@@ -427,6 +423,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		})
 	}
 
+	//Related to ala data.
 	main.prototype.initData = function() {
 		let alaRegionsUrl = `https://regions.ala.org.au/regions/regionList?type=Biogeographic regions`;
 
@@ -436,6 +433,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		})
 	}
 
+	//add event listeners for html DOM elements.
 	main.prototype.initEvents = function() {
 		document.getElementById("panel-toggle").addEventListener("click", this.panelOpen.bind(this))
 		document.getElementById("modal-close-button").addEventListener("click", this.toggleModal.bind(this))
@@ -496,6 +494,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
 	}
 
+	//Toggle side panel
 	main.prototype.panelOpen = function() {
 		//Probably store these as states.
 		let toggle = document.getElementById("panel-toggle");
@@ -556,44 +555,6 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		} else if (this.currentZoom > 6 || this.alwaysShowSubBioregions) {
 			this.subregions_simple ? this.subregions_simple.addTo(this.map) : this.subregions.addTo(this.map)
 		}
-	}
-
-	main.prototype.getBioInfo = function(args) {
-		let base = "https://biocache.ala.org.au/ws/explore";
-		let lat = args.lat, lng = args.lng, radius = this.apiQueryParams.radius;
-		let groupsUrl = `${base}/groups.json?` +
-						`lat=${lat}&lon=${lng}&` +
-						`radius=${radius}&fq=geospatial_kosher%3Atrue&facets=species_group&qc=&_=1534039843703`
-
-		let animalsUrl = `${base}/group/Animals.json?` +
-				   `lat=${lat}&lon=${lng}` +
-				   `&radius=${radius}&fq=geospatial_kosher%3Atrue&qc=&pageSize=50&_=1534036317736`;
-		
-
-		sendRequest({method: "GET", url: groupsUrl})
-		.then((result) => {
-			result = JSON.parse(result);
-			if (this.circle) this.circle.removeFrom(this.map)
-			this.circle = L.circle(
-				[lat, lng],
-				{ radius: radius * 1000, color: "#89ff77", weight: 1 }
-			)
-			
-			this.circle.addTo(this.map);
-
-			// let panel = document.getElementById("subregion-detail");
-			// panel.innerHTML += `
-			// 	<ul>
-			// 		${result.map(info => `<li>${info.name} - ${info.speciesCount}</li>`).join('')}
-			// 	</ul>
-			// `
-		})
-	}
-
-	main.prototype.handleErrors = function(error) {
-
-		// TODO
-
 	}
 
 	return new main();
