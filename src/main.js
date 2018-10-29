@@ -13,6 +13,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		sendRequests
 	} = require("./utils.js");
 
+
+	/**
+	 * Initialize state.
+	 */
 	function main() {
 		this.isInitialized = false;
 		this.defaultStyle = {
@@ -45,10 +49,9 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		});
 	}
 
-	/*
-		Define functions here.
-	*/
-
+	/**
+	 * Initialize state.
+	 */
 	main.prototype.init = function() {
 		if (this.isInitialized) return;
 		this.initMap();
@@ -64,7 +67,12 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		document.getElementById("hide-bioregions").checked = false;
 		document.getElementById("hide-subregions").checked = false;
 	}
-
+	
+	/**
+	 * Getting data from ala.
+	 * Ala has a list of REST API endpoints that can be used but none of them have specific data we wanted
+	 * The endpoint used here is for their own application (not expected to be used by 3rd party)
+	 */
 	main.prototype.getRegionInfo = function(groups, more) {	
 		let regionPid = this.alaRegionsMapping[this.currentRegionName].pid;
 
@@ -184,6 +192,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		})
 	}
 
+	/**
+	 * Initialize map.
+	 * 
+	 */
 	main.prototype.initMap = function() {
 		this.map = L.map('mapid').setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM);
 		this.zoomLevels = {
@@ -192,11 +204,32 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		}
 
 		var defaultLayer = L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(this.map);
+
+		/**
+		 * 
+		 */
 		let baseLayers = {
 			'OpenStreetMap Default': defaultLayer,
-			'Esri.WorldStreetMap': L.tileLayer.provider('Esri.WorldStreetMap'),
+			'Esri WorldStreetMap': L.tileLayer.provider('Esri.WorldStreetMap'),
 			'Esri WorldImagery': L.tileLayer.provider('Esri.WorldImagery'),
-			"NASAGIBS": L.tileLayer.provider('NASAGIBS.ViirsEarthAtNight2012')
+			'Esri DeLorme': L.tileLayer.provider('Esri.DeLorme'),
+			'Esri WorldTopoMap': L.tileLayer.provider('Esri.WorldTopoMap'),
+			'Esri WorldTerrain': L.tileLayer.provider('Esri.WorldTerrain'),
+			'Esri WorldShadedRelief': L.tileLayer.provider('Esri.WorldShadedRelief'),
+			'Esri WorldPhysical': L.tileLayer.provider('Esri.WorldPhysical'),
+			'Esri OceanBasemap': L.tileLayer.provider('Esri.OceanBasemap'),
+			'Esri NatGeoWorldMap': L.tileLayer.provider('Esri.NatGeoWorldMap'),
+			'Esri WorldGrayCanvas': L.tileLayer.provider('Esri.WorldGrayCanvas'),
+			"NASAGIBS": L.tileLayer.provider('NASAGIBS.ViirsEarthAtNight2012'),
+			'OpenStreetMap Black and White': L.tileLayer.provider('OpenStreetMap.BlackAndWhite'),
+			'OpenStreetMap H.O.T.': L.tileLayer.provider('OpenStreetMap.HOT'),
+			'Thunderforest OpenCycleMap': L.tileLayer.provider('Thunderforest.OpenCycleMap'),
+			'Thunderforest Transport': L.tileLayer.provider('Thunderforest.Transport'),
+			'Thunderforest Landscape': L.tileLayer.provider('Thunderforest.Landscape'),
+			'Hydda Full': L.tileLayer.provider('Hydda.Full'),
+			'Stamen Toner': L.tileLayer.provider('Stamen.Toner'),
+			'Stamen Terrain': L.tileLayer.provider('Stamen.Terrain'),
+			'Stamen Watercolor': L.tileLayer.provider('Stamen.Watercolor')
 		}
 
 		let overlayLayers = {}
@@ -225,7 +258,8 @@ const DEFAULT_MARKER_RADIUS = 50000;
 
 		this.map.addControl( searchControl );
 	}
-
+	
+	//handler for geojson data.
 	main.prototype.handleGeoJson = function(data, onEachFeature, style) {
 		return new Promise((res, rej) => {
 			res(
@@ -241,6 +275,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 		})
 	}
 
+	//Handler for click events for each feature in geojson layer
 	main.prototype.onEachFeatureRegions = function(feature, layer) {
 		layer.on({
 			click: (e) => {
@@ -283,7 +318,7 @@ const DEFAULT_MARKER_RADIUS = 50000;
 			}
 		});
 	}
-
+	
 	main.prototype.onEachFeatureSubRegions = function(feature, layer) {
 		layer.on({
 			click: (e) => {
@@ -298,6 +333,10 @@ const DEFAULT_MARKER_RADIUS = 50000;
 				if (this.marker != undefined) {
 					this.map.removeLayer(this.marker);
 				}
+				
+				this.marker = L.marker(e.latlng).addTo(this.map);
+				this.marker.bindPopup(this.showMoreButton).openPopup();
+
 				var titlePostRegion = this.currentRegionName.replace(/ /g,"-");
 				let url =  'https://www.greenprints.org.au/wp-json/wp/v2/posts?categories=39&slug='+titlePostRegion;
 				if (!this.data[titlePostRegion]) this.data[titlePostRegion] = {};
@@ -323,14 +362,11 @@ const DEFAULT_MARKER_RADIUS = 50000;
 					})
 				}
 				
-
-				this.marker = L.marker(e.latlng).addTo(this.map);
-				this.marker.bindPopup(this.showMoreButton).openPopup();
 			}
 		});
 	}
 
-
+	//Get geojson for the layers
 	main.prototype.initCarto = function() {
 		sendRequest({method: "GET", url: 'https://www.greenprints.org.au/map-app/regions.json'})
 		.then((data) => this.handleGeoJson(data, this.onEachFeatureRegions.bind(this), {
